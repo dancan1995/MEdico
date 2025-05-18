@@ -1,0 +1,17 @@
+﻿# Node modules
+node_modules/
+
+# Expo
+.expo/
+.expo-shared/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
