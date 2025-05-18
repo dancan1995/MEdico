@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from './screens/HomeScreen';
+import SummaryScreen from './screens/SummaryScreen';
 import PressureReliefScreen from './screens/PressureReliefScreen';
 import BladderSchedulerScreen from './screens/BladderSchedulerScreen';
 import FunctionalGoalsScreen from './screens/FunctionalGoalsScreen';
@@ -12,16 +13,32 @@ import PainLogScreen from './screens/PainLogScreen';
 import CaregiverPortalScreen from './screens/CaregiverPortalScreen';
 import MentalHealthScreen from './screens/MentalHealthScreen';
 
+import ChatLoginScreen from './screens/ChatLoginScreen';
+import SubscriptionScreen from './screens/SubscriptionScreen';
+import ChatBotScreen from './screens/ChatBotScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          headerStyle: { backgroundColor: '#007AFF' },
+          headerTintColor: '#fff',
+        }}
+      >
+        {/* Main dashboard */}
         <Stack.Screen
           name="Home"
           component={HomeScreen}
           options={{ title: 'MEdico' }}
+        />
+        <Stack.Screen
+          name="Summary"
+          component={SummaryScreen}
+          options={{ title: 'Progress Summary' }}
         />
         <Stack.Screen
           name="PressureRelief"
@@ -52,6 +69,23 @@ export default function App() {
           name="MentalHealth"
           component={MentalHealthScreen}
           options={{ title: 'Mental Health & Journal' }}
+        />
+
+        {/* Chat flow (triggered only via the FAB) */}
+        <Stack.Screen
+          name="ChatLogin"
+          component={ChatLoginScreen}
+          options={{ title: 'Sign In to Chat' }}
+        />
+        <Stack.Screen
+          name="Subscription"
+          component={SubscriptionScreen}
+          options={{ title: 'Subscription Plans' }}
+        />
+        <Stack.Screen
+          name="ChatBot"
+          component={ChatBotScreen}
+          options={{ title: 'Therapy Chat' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

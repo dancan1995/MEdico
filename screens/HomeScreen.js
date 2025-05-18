@@ -1,7 +1,20 @@
 // screens/HomeScreen.js
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5, Entypo } from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  FontAwesome5,
+  Entypo,
+} from '@expo/vector-icons';
+import Svg, { Defs, Path, Text as SvgText, TextPath } from 'react-native-svg';
 
 const features = [
   {
@@ -50,33 +63,66 @@ const features = [
 
 export default function HomeScreen({ navigation }) {
   return (
-    <ScrollView contentContainerStyle={styles.scroll}>
-      <Image source={require('../assets/images/logo.png')} style={styles.logo} />
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <Image
+          source={require('../assets/images/logo.png')}
+          style={styles.logo}
+        />
+        <Text style={styles.header}>Welcome to MEdico</Text>
 
-      <Text style={styles.header}>Welcome to MEdico</Text>
+        <View style={styles.grid}>
+          {features.map((f) => (
+            <TouchableOpacity
+              key={f.key}
+              style={[styles.card, { backgroundColor: f.color }]}
+              onPress={() => navigation.navigate(f.key)}
+              activeOpacity={0.8}
+            >
+              {f.icon}
+              <Text style={styles.cardTitle}>{f.title}</Text>
+              <Text style={styles.cardDesc}>{f.desc}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
-      <View style={styles.grid}>
-        {features.map((f) => (
-          <TouchableOpacity
-            key={f.key}
-            style={[styles.card, { backgroundColor: f.color }]}
-            onPress={() => navigation.navigate(f.key)}
-            activeOpacity={0.8}
-          >
-            {f.icon}
-            <Text style={styles.cardTitle}>{f.title}</Text>
-            <Text style={styles.cardDesc}>{f.desc}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+      {/* Floating Chat+AI Button */}
+      <TouchableOpacity
+        style={styles.chatFab}
+        onPress={() => navigation.navigate('ChatLogin')}
+        activeOpacity={0.7}
+      >
+        <Svg
+          width={56}
+          height={56}
+          viewBox="0 0 56 56"
+          style={StyleSheet.absoluteFill}
+        >
+          <Defs>
+            <Path
+              id="circlePath"
+              d="M28,28 m-20,0 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0"
+            />
+          </Defs>
+          <SvgText fill="#fff" fontSize="8" fontWeight="600">
+            <TextPath href="#circlePath" startOffset="0%">
+              MEdico AI • MEdico AI
+            </TextPath>
+          </SvgText>
+        </Svg>
+        <Ionicons name="chatbubble-ellipses" size={28} color="#fff" />
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1 },
   scroll: {
     padding: 16,
     alignItems: 'center',
+    paddingBottom: 100, // space for FAB
   },
   logo: {
     width: 100,
@@ -112,5 +158,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     marginTop: 4,
+  },
+  chatFab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3f51b5',
+    elevation: 5,
   },
 });
