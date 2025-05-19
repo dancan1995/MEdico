@@ -10,15 +10,15 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { firestore, auth } from '../firebase';
+import { auth, firestore } from '../firebase';
 import {
   collection,
-  addDoc,
-  onSnapshot,
   query,
   orderBy,
+  onSnapshot,
+  addDoc,
   serverTimestamp,
-  doc,
+  doc as docRef,
   deleteDoc,
 } from 'firebase/firestore';
 
@@ -29,58 +29,76 @@ export default function FunctionalGoalsScreen() {
 
   useEffect(() => {
     if (!user) {
-      // if you prefer local-only when not signed in, skip subscribing
+      // No user signed in → skip Firestore subscription
       return;
     }
-    const q = query(
+    const goalsQuery = query(
       collection(firestore, 'users', user.uid, 'goals'),
       orderBy('createdAt', 'desc')
     );
-    const unsub = onSnapshot(q, (snap) => {
-      setGoals(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const unsubscribe = onSnapshot(goalsQuery, snapshot => {
+      const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setGoals(list);
+    }, error => {
+      console.error('Failed to load goals:', error);
+      Alert.alert('Error', 'Could not load goals.');
     });
-    return unsub;
+    return unsubscribe;
   }, [user]);
 
   const addGoal = async () => {
     const text = goalInput.trim();
-    if (!text) return Alert.alert('Enter a goal first');
+    if (!text) {
+      return Alert.alert('Enter a goal first');
+    }
     if (!user) {
-      // fallback: local-only
+      // Local fallback for guests
       setGoals(prev => [{ id: Date.now().toString(), text }, ...prev]);
       setGoalInput('');
       return;
     }
     try {
-      await addDoc(collection(firestore, 'users', user.uid, 'goals'), {
-        text,
-        createdAt: serverTimestamp(),
-      });
+      await addDoc(
+        collection(firestore, 'users', user.uid, 'goals'),
+        {
+          text,
+          createdAt: serverTimestamp(),
+        }
+      );
       setGoalInput('');
     } catch (err) {
+      console.error('Add goal error:', err);
       Alert.alert('Error adding goal', err.message);
     }
   };
 
-  const removeGoal = (id) => {
+  const removeGoal = id => {
     if (!user) {
+      // Local-only removal
       setGoals(prev => prev.filter(g => g.id !== id));
       return;
     }
-    Alert.alert('Delete this goal?', '', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteDoc(doc(firestore, 'users', user.uid, 'goals', id));
-          } catch (err) {
-            Alert.alert('Error deleting', err.message);
+    Alert.alert(
+      'Delete this goal?',
+      'This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(
+                docRef(firestore, 'users', user.uid, 'goals', id)
+              );
+            } catch (err) {
+              console.error('Delete goal error:', err);
+              Alert.alert('Error deleting goal', err.message);
+            }
           }
-        },
-      },
-    ]);
+        }
+      ]
+    );
   };
 
   return (
@@ -117,6 +135,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 16, marginBottom: 4 },
   input: {
     borderWidth: 1,
+    borderColor: '#CCC',
     borderRadius: 4,
     padding: 8,
     marginBottom: 12,
@@ -125,5 +144,6 @@ const styles = StyleSheet.create({
   goalItem: {
     padding: 12,
     borderBottomWidth: 1,
+    borderColor: '#EEE',
   },
 });

@@ -8,46 +8,27 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-
 import { auth } from '../firebase';
-import {
-  GoogleAuthProvider,
-  signInWithCredential,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from 'firebase/auth';
-
-WebBrowser.maybeCompleteAuthSession();
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function ChatLoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Configure your OAuth client IDs from Firebase console → Project Settings → OAuth 2.0
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId: 'YOUR_EXPO_CLIENT_ID',
-    iosClientId:   'YOUR_IOS_CLIENT_ID',
-    androidClientId:'YOUR_ANDROID_CLIENT_ID',
-    webClientId:   'YOUR_WEB_CLIENT_ID',
-  });
-
-  // Handle Google sign-in response
+  // If user is already authenticated, skip straight to Subscription
   useEffect(() => {
-    if (response?.type === 'success') {
-      const { id_token } = response.params;
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential)
-        .then(() => navigation.replace('Subscription'))
-        .catch(err => {
-          console.error(err);
-          Alert.alert('Google Sign-In Error', err.message);
-        });
-    }
-  }, [response]);
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        navigation.replace('Subscription');
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      return Alert.alert('Missing fields', 'Please enter both email and password.');
+    }
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
       navigation.replace('Subscription');
@@ -56,18 +37,9 @@ export default function ChatLoginScreen({ navigation }) {
     }
   };
 
-  const handleCreateAccount = async () => {
-    try {
-      await createUserWithEmailAndPassword(auth, email.trim(), password);
-      navigation.replace('Subscription');
-    } catch (err) {
-      Alert.alert('Signup Error', err.message);
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Sign in to MEdico AI Therapist</Text>
+      <Text style={styles.header}>Welcome back to MEdico AI</Text>
 
       <TextInput
         style={styles.input}
@@ -94,26 +66,13 @@ export default function ChatLoginScreen({ navigation }) {
 
       <TouchableOpacity
         style={styles.buttonSecondary}
-        onPress={handleCreateAccount}
+        onPress={() => navigation.navigate('CreateAccount')}
       >
         <Text style={styles.buttonText}>Create Account</Text>
       </TouchableOpacity>
 
-      <Text style={styles.or}>— or —</Text>
-
-      <TouchableOpacity
-        style={[
-          styles.buttonGoogle,
-          { opacity: request ? 1 : 0.5 },
-        ]}
-        onPress={() => promptAsync()}
-        disabled={!request}
-      >
-        <Text style={styles.buttonText}>Continue with Google</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.small}>
-        You’ll need an account and subscription to chat.
+      <Text style={styles.smallText}>
+        You need an account and subscription to chat with MEdico AI.
       </Text>
     </View>
   );
@@ -146,34 +105,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     paddingVertical: 14,
     borderRadius: 8,
-    marginBottom: 12,
     alignItems: 'center',
+    marginBottom: 12,
   },
   buttonSecondary: {
     backgroundColor: '#005BB5',
     paddingVertical: 14,
     borderRadius: 8,
-    marginBottom: 12,
     alignItems: 'center',
-  },
-  buttonGoogle: {
-    backgroundColor: '#DB4437',
-    paddingVertical: 14,
-    borderRadius: 8,
     marginBottom: 24,
-    alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
-  or: {
-    textAlign: 'center',
-    marginVertical: 12,
-    color: '#666',
-  },
-  small: {
+  smallText: {
     textAlign: 'center',
     color: '#666',
     fontSize: 12,

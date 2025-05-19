@@ -4,14 +4,15 @@ import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 import 'firebase/compat/functions';
 
-// — your Firebase config —
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: 'AIzaSy…',
-  authDomain: 'medico-57cc8.firebaseapp.com',
-  projectId: 'medico-57cc8',
-  storageBucket: 'medico-57cc8.appspot.com',
-  messagingSenderId: '735788395976',
-  appId: '1:735788395976:web:ad74fcca4be5c4ad96e4fd',
+  apiKey: "AIzaSyDxVBdgLuir-lYSXyY3THJfs4YSNFct_uc",
+  authDomain: "medico-57cc8.firebaseapp.com",
+  projectId: "medico-57cc8",
+  storageBucket: "medico-57cc8.firebasestorage.app",
+  messagingSenderId: "735788395976",
+  appId: "1:735788395976:web:ad74fcca4be5c4ad96e4fd",
+  measurementId: "G-CP77TCL8QY"
 };
 
 if (!firebase.apps.length) {

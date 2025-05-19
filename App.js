@@ -14,6 +14,7 @@ import CaregiverPortalScreen from './screens/CaregiverPortalScreen';
 import MentalHealthScreen from './screens/MentalHealthScreen';
 
 import ChatLoginScreen from './screens/ChatLoginScreen';
+import CreateAccountScreen from './screens/CreateAccountScreen';  // ← import added
 import SubscriptionScreen from './screens/SubscriptionScreen';
 import ChatBotScreen from './screens/ChatBotScreen';
 
@@ -27,6 +28,8 @@ export default function App() {
         screenOptions={{
           headerStyle: { backgroundColor: '#007AFF' },
           headerTintColor: '#fff',
+          headerBackTitleVisible: true,
+          headerBackTitle: 'Back',
         }}
       >
         {/* Main dashboard */}
@@ -43,7 +46,9 @@ export default function App() {
         <Stack.Screen
           name="PressureRelief"
           component={PressureReliefScreen}
-          options={{ title: 'Pressure-Relief Timer' }}
+          options={{ title: 'Pressure-Relief Timer',
+            unmountOnBlur: false, // Reset timer when navigating away
+           }}
         />
         <Stack.Screen
           name="BladderScheduler"
@@ -70,12 +75,16 @@ export default function App() {
           component={MentalHealthScreen}
           options={{ title: 'Mental Health & Journal' }}
         />
-
         {/* Chat flow (triggered only via the FAB) */}
         <Stack.Screen
           name="ChatLogin"
           component={ChatLoginScreen}
           options={{ title: 'Sign In to Chat' }}
+        />
+        <Stack.Screen
+          name="CreateAccount"
+          component={CreateAccountScreen}
+          options={{ title: 'Create Account' }}
         />
         <Stack.Screen
           name="Subscription"
