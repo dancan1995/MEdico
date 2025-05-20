@@ -90,7 +90,7 @@ export default function HomeScreen({ navigation }) {
       {/* Floating Chat+AI Button */}
       <TouchableOpacity
         style={styles.chatFab}
-        onPress={() => navigation.navigate('ChatLogin')}
+        onPress={() => navigation.navigate('Subscription')}
         activeOpacity={0.7}
       >
         <Svg

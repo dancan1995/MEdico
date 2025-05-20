@@ -1,5 +1,44 @@
 {
-  "plugins": [
-    "expo-web-browser"
-  ]
+  "expo": {
+    "name": "MEdico",
+    "slug": "medico",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "platforms": ["ios", "android", "web"],
+
+    "plugins": [
+      "expo-web-browser"
+    ],
+
+    "ios": {
+      "bundleIdentifier": "com.yourcompany.medico",
+      "buildNumber": "1.0.0",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.yourcompany.medico",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/logo.png"
+    },
+
+    "description": "Daily SCI recovery support & tracking",
+    "githubUrl": "https://github.com/dancan1995/MEdico"
+  }
 }

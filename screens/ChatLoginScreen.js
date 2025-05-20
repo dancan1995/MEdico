@@ -19,7 +19,7 @@ export default function ChatLoginScreen({ navigation }) {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
-        navigation.replace('Subscription');
+        navigation.replace('Home');
       }
     });
     return unsubscribe;
@@ -31,7 +31,7 @@ export default function ChatLoginScreen({ navigation }) {
     }
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      navigation.replace('Subscription');
+      navigation.replace('Home');
     } catch (err) {
       Alert.alert('Login Error', err.message);
     }
@@ -39,7 +39,7 @@ export default function ChatLoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Welcome back to MEdico AI</Text>
+      <Text style={styles.header}>Welcome back to MEdico</Text>
 
       <TextInput
         style={styles.input}

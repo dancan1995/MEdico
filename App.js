@@ -14,7 +14,7 @@ import CaregiverPortalScreen from './screens/CaregiverPortalScreen';
 import MentalHealthScreen from './screens/MentalHealthScreen';
 
 import ChatLoginScreen from './screens/ChatLoginScreen';
-import CreateAccountScreen from './screens/CreateAccountScreen';  // ← import added
+import CreateAccountScreen from './screens/CreateAccountScreen';
 import SubscriptionScreen from './screens/SubscriptionScreen';
 import ChatBotScreen from './screens/ChatBotScreen';
 
@@ -24,14 +24,42 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Home"
+        // Launch the ChatLogin screen first
+        initialRouteName="ChatLogin"
         screenOptions={{
           headerStyle: { backgroundColor: '#007AFF' },
           headerTintColor: '#fff',
+          // Only show the back arrow, no label
           headerBackTitleVisible: true,
           headerBackTitle: 'Back',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            fontSize: 20,
+          },
         }}
       >
+        {/* Chat flow entry point */}
+        <Stack.Screen
+          name="ChatLogin"
+          component={ChatLoginScreen}
+          options={{ title: 'Sign In to Continue' }}
+        />
+        <Stack.Screen
+          name="CreateAccount"
+          component={CreateAccountScreen}
+          options={{ title: 'Create Account' }}
+        />
+        <Stack.Screen
+          name="Subscription"
+          component={SubscriptionScreen}
+          options={{ title: 'Subscription Plans' }}
+        />
+        <Stack.Screen
+          name="ChatBot"
+          component={ChatBotScreen}
+          options={{ title: 'Therapy Chat' }}
+        />
+
         {/* Main dashboard */}
         <Stack.Screen
           name="Home"
@@ -46,9 +74,10 @@ export default function App() {
         <Stack.Screen
           name="PressureRelief"
           component={PressureReliefScreen}
-          options={{ title: 'Pressure-Relief Timer',
-            unmountOnBlur: false, // Reset timer when navigating away
-           }}
+          options={{
+            title: 'Pressure-Relief Timer',
+            unmountOnBlur: false, // keep timer running when navigating away
+          }}
         />
         <Stack.Screen
           name="BladderScheduler"
@@ -74,27 +103,6 @@ export default function App() {
           name="MentalHealth"
           component={MentalHealthScreen}
           options={{ title: 'Mental Health & Journal' }}
-        />
-        {/* Chat flow (triggered only via the FAB) */}
-        <Stack.Screen
-          name="ChatLogin"
-          component={ChatLoginScreen}
-          options={{ title: 'Sign In to Chat' }}
-        />
-        <Stack.Screen
-          name="CreateAccount"
-          component={CreateAccountScreen}
-          options={{ title: 'Create Account' }}
-        />
-        <Stack.Screen
-          name="Subscription"
-          component={SubscriptionScreen}
-          options={{ title: 'Subscription Plans' }}
-        />
-        <Stack.Screen
-          name="ChatBot"
-          component={ChatBotScreen}
-          options={{ title: 'Therapy Chat' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
