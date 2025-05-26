@@ -1,6 +1,8 @@
 ﻿# Node modules
 node_modules/
 
+config.js/
+
 # Expo
 .expo/
 .expo-shared/

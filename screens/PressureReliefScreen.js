@@ -9,6 +9,8 @@ import {
   Vibration,
   Alert,
   Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
@@ -22,7 +24,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 
-// Use modern flags for the notification handler
+// Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -36,15 +38,13 @@ export default function PressureReliefScreen() {
   const [intervalMins, setIntervalMins] = useState('30');
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [running, setRunning] = useState(false);
-
   const timerRef = useRef(null);
   const notificationIdRef = useRef(null);
   const user = auth.currentUser;
 
-  // 1️⃣ On mount: permissions, channel, AND load Firestore state
   useEffect(() => {
     (async () => {
-      // Permissions & channel (same as before)…
+      // request permissions & create channel
       if (Constants.isDevice) {
         let { status } = await Notifications.getPermissionsAsync();
         if (status !== 'granted') {
@@ -58,15 +58,18 @@ export default function PressureReliefScreen() {
         }
       }
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('pressure-reliefs', {
-          name: 'Pressure Relief',
-          importance: Notifications.AndroidImportance.HIGH,
-          sound: 'default',
-          vibrationPattern: [0, 250, 250, 250],
-        });
+        await Notifications.setNotificationChannelAsync(
+          'pressure-reliefs',
+          {
+            name: 'Pressure Relief',
+            importance: Notifications.AndroidImportance.HIGH,
+            sound: 'default',
+            vibrationPattern: [0, 250, 250, 250],
+          }
+        );
       }
 
-      // 🔄 Load persisted timer state
+      // load persisted state
       if (user) {
         const ref = doc(
           firestore,
@@ -77,34 +80,28 @@ export default function PressureReliefScreen() {
         );
         const snap = await getDoc(ref);
         if (snap.exists()) {
-          const data = snap.data();
-          const { intervalMins: mins, startedAt, isRunning } = data;
+          const { intervalMins: mins, startedAt, isRunning } = snap.data();
           if (isRunning && mins && startedAt) {
-            // compute elapsed seconds
             const elapsed = (Date.now() - startedAt.toMillis()) / 1000;
             const total = mins * 60;
             const remaining = total - (elapsed % total);
-            setSecondsLeft(Math.floor(remaining));
             startCountdownLoop(Math.floor(remaining), mins);
           }
         }
       }
     })();
 
-    // cleanup only timers, NOT notifications or Firestore state
-    return () => {
-      clearInterval(timerRef.current);
-    };
+    return () => clearInterval(timerRef.current);
   }, []);
 
-  // format MM:SS
+  // format seconds to MM:SS
   const formatCountdown = secs => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = (secs % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
-  // reusable loop starter
+  // loop helper
   const startCountdownLoop = (initialSecs, mins) => {
     setRunning(true);
     setSecondsLeft(initialSecs);
@@ -122,7 +119,11 @@ export default function PressureReliefScreen() {
   };
 
   const scheduleNotification = async mins => {
-    const trigger = { seconds: mins * 60, repeats: true, channelId: 'pressure-reliefs' };
+    const trigger = {
+      seconds: mins * 60,
+      repeats: true,
+      channelId: 'pressure-reliefs',
+    };
     const id = await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Pressure Relief Reminder',
@@ -135,22 +136,19 @@ export default function PressureReliefScreen() {
     return id;
   };
 
-  // 2️⃣ Start: write to Firestore and kick off countdown + notification
+  // start timer & notification
   const startTimer = async () => {
+    Keyboard.dismiss();
     const mins = parseInt(intervalMins, 10);
     if (!mins || mins <= 0) {
       return Alert.alert('Invalid interval', 'Enter a positive number.');
     }
-
-    // stop existing
     clearInterval(timerRef.current);
     if (notificationIdRef.current) {
       await Notifications.cancelScheduledNotificationAsync(
         notificationIdRef.current
       );
     }
-
-    // persist settings
     if (user) {
       await setDoc(
         doc(firestore, 'users', user.uid, 'settings', 'pressureTimer'),
@@ -161,16 +159,14 @@ export default function PressureReliefScreen() {
         }
       );
     }
-
-    // in-app countdown & notif
     startCountdownLoop(mins * 60, mins);
     notificationIdRef.current = await scheduleNotification(mins);
-
     Alert.alert('Started', `Every ${mins} minutes`);
   };
 
-  // 3️⃣ Stop: clear interval, cancel notification, update Firestore
+  // stop timer & cancel notification
   const stopTimer = async () => {
+    Keyboard.dismiss();
     clearInterval(timerRef.current);
     setRunning(false);
     setSecondsLeft(0);
@@ -191,46 +187,49 @@ export default function PressureReliefScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Ionicons
-        name="hourglass-outline"
-        size={48}
-        color="#007AFF"
-        style={styles.icon}
-      />
-      <Text style={styles.countdown}>
-        {running ? formatCountdown(secondsLeft) : '00:00'}
-      </Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <Ionicons
+          name="hourglass-outline"
+          size={48}
+          color="#007AFF"
+          style={styles.icon}
+        />
+        <Text style={styles.countdown}>
+          {running ? formatCountdown(secondsLeft) : '00:00'}
+        </Text>
 
-      <Text style={styles.label}>Interval (minutes)</Text>
-      <TextInput
-        style={styles.input}
-        keyboardType="number-pad"
-        value={intervalMins}
-        onChangeText={setIntervalMins}
-      />
+        <Text style={styles.label}>Interval (minutes)</Text>
+        <TextInput
+          style={styles.input}
+          keyboardType="number-pad"
+          value={intervalMins}
+          onChangeText={setIntervalMins}
+          onFocus={() => {}}
+        />
 
-      <View style={styles.buttons}>
-        <TouchableOpacity
-          style={[styles.button, running && styles.disabled]}
-          onPress={startTimer}
-          disabled={running}
-        >
-          <Text style={styles.buttonText}>Start</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.button,
-            styles.stopButton,
-            !running && styles.disabled,
-          ]}
-          onPress={stopTimer}
-          disabled={!running}
-        >
-          <Text style={styles.buttonText}>Stop</Text>
-        </TouchableOpacity>
+        <View style={styles.buttons}>
+          <TouchableOpacity
+            style={[styles.button, running && styles.disabled]}
+            onPress={startTimer}
+            disabled={running}
+          >
+            <Text style={styles.buttonText}>Start</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.stopButton,
+              !running && styles.disabled,
+            ]}
+            onPress={stopTimer}
+            disabled={!running}
+          >
+            <Text style={styles.buttonText}>Stop</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -274,5 +273,9 @@ const styles = StyleSheet.create({
   },
   stopButton: { backgroundColor: '#f44336' },
   disabled: { opacity: 0.5 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

@@ -4,41 +4,57 @@
     "slug": "medico",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/logo.png",
+      "image": "./assets/images/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
-    "platforms": ["ios", "android", "web"],
-
-    "plugins": [
-      "expo-web-browser"
+    "assetBundlePatterns": [
+      "**/*"
     ],
-
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "plugins": [
+      "expo-web-browser",
+      "expo-notifications"
+    ],
     "ios": {
-      "bundleIdentifier": "com.yourcompany.medico",
+      "bundleIdentifier": "com.eatad.medico",
       "buildNumber": "1.0.0",
       "supportsTablet": false
     },
     "android": {
-      "package": "com.yourcompany.medico",
+      "package": "com.eatad.medico",
       "versionCode": 1,
+      "permissions": [
+        "VIBRATE",
+        "NOTIFICATIONS",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/images//logo.png",
         "backgroundColor": "#ffffff"
       }
     },
     "web": {
-      "favicon": "./assets/logo.png"
+      "favicon": "./assets/images/logo.png"
     },
-
     "description": "Daily SCI recovery support & tracking",
-    "githubUrl": "https://github.com/dancan1995/MEdico"
+    "githubUrl": "https://github.com/dancan1995/MEdico",
+    "extra": {
+      "eas": {
+        "projectId": "1efd5469-5ab8-4eba-aa46-646fb1cad2d9"
+      }
+    },
+    "owner": "dancun2025"
   }
 }

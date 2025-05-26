@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { auth } from '../firebase';
 import {
   Ionicons,
   MaterialCommunityIcons,
@@ -62,13 +63,32 @@ const features = [
 ];
 
 export default function HomeScreen({ navigation }) {
+  const handleLogout = async () => {
+    await auth.signOut();
+    navigation.replace('ChatLogin');
+  };
+
   return (
     <View style={styles.container}>
+      {/* Top bar with Logout & Settings */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.topButton}
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <Ionicons name="settings-outline" size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Image
-          source={require('../assets/images/logo.png')}
-          style={styles.logo}
-        />
+        {/* Logo tappable to return to login */}
+        <TouchableOpacity>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
+        </TouchableOpacity>
+
         <Text style={styles.header}>Welcome to MEdico</Text>
 
         <View style={styles.grid}>
@@ -85,9 +105,33 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Extra bottom padding so FABs don’t overlap */}
+        <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Floating Chat+AI Button */}
+      {/* Progress FAB */}
+      <TouchableOpacity
+        style={styles.summaryFab}
+        onPress={() => navigation.navigate('Summary')}
+        activeOpacity={0.7}
+      >
+        <Svg width={56} height={56} viewBox="0 0 56 56" style={StyleSheet.absoluteFill}>
+          <Defs>
+            <Path
+              id="summaryCircle"
+              d="M28,28 m-20,0 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0"
+            />
+          </Defs>
+          <SvgText fill="#fff" fontSize="8" fontWeight="600">
+            <TextPath href="#summaryCircle" startOffset="0%">
+              My •• Progress •• Summary ••
+            </TextPath>
+          </SvgText>
+        </Svg>
+      </TouchableOpacity>
+
+      {/* Chat+AI FAB */}
       <TouchableOpacity
         style={styles.chatFab}
         onPress={() => navigation.navigate('Subscription')}
@@ -107,7 +151,7 @@ export default function HomeScreen({ navigation }) {
           </Defs>
           <SvgText fill="#fff" fontSize="8" fontWeight="600">
             <TextPath href="#circlePath" startOffset="0%">
-              MEdico AI • MEdico AI
+              MEdico AI •••• MEdico AI ••••
             </TextPath>
           </SvgText>
         </Svg>
@@ -119,10 +163,29 @@ export default function HomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
+  topBar: {
+    position: 'absolute',
+    top: 10,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    zIndex: 10,
+  },
+  topButton: {
+    backgroundColor: '#fff',
+    padding: 8,
+    borderRadius: 20,
+    elevation: 3,
+  },
+
   scroll: {
     padding: 16,
     alignItems: 'center',
-    paddingBottom: 100, // space for FAB
+    paddingBottom: 100,
+    paddingTop: 70, // leave room for topBar
   },
   logo: {
     width: 100,
@@ -159,6 +222,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
+
+  summaryFab: {
+    position: 'absolute',
+    left: 24,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: 'hidden',
+    backgroundColor: '#795548',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+  },
+
   chatFab: {
     position: 'absolute',
     right: 24,

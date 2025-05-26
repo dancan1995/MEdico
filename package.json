@@ -10,29 +10,55 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/config-plugins": "~10.0.0",
     "@expo/metro-runtime": "~5.0.4",
+    "@expo/prebuild-config": "~9.0.0",
     "@react-native-async-storage/async-storage": "2.1.2",
-    "@react-native-community/datetimepicker": "^8.3.0",
+    "@react-native-community/datetimepicker": "8.3.0",
     "@react-native-picker/picker": "^2.11.0",
     "@react-navigation/native": "^7.1.9",
     "@react-navigation/stack": "^7.3.2",
     "expo": "^53.0.9",
     "expo-auth-session": "~6.1.5",
-    "expo-notifications": "^0.31.2",
+    "expo-av": "~15.1.4",
+    "expo-dev-client": "~5.1.8",
+    "expo-notifications": "~0.31.2",
     "expo-web-browser": "~14.1.6",
-    "firebase": "^9.22.2",
+    "firebase": "^11.8.1",
     "openai": "^4.100.0",
-    "react": "^19.0.0",
+    "pdf-lib": "^1.17.1",
+    "react": "~19.0.0",
     "react-dom": "19.0.0",
     "react-native": "^0.79.2",
     "react-native-chart-kit": "^6.12.0",
     "react-native-elements": "^3.4.3",
-    "react-native-safe-area-context": "^5.4.0",
+    "react-native-fs": "^2.20.0",
+    "react-native-safe-area-context": "5.4.0",
     "react-native-svg": "15.11.2",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "^0.20.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9"
+    "@babel/core": "^7.12.9",
+    "eas-cli": "^16.6.2"
+  },
+  "overrides": {
+    "@expo/config-plugins": "~10.0.0",
+    "@expo/prebuild-config": "~9.0.0"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "react-native-chart-kit",
+          "react-native-fs",
+          "firebase",
+          "openai",
+          "pdf-lib",
+          "react-native-elements",
+          "react-native-vector-icons"
+        ]
+      }
+    }
   }
 }

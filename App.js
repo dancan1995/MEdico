@@ -4,19 +4,24 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
+import ChatLoginScreen from './screens/ChatLoginScreen';
+import CreateAccountScreen from './screens/CreateAccountScreen';
+import SubscriptionScreen from './screens/SubscriptionScreen';
+import ChatBotScreen from './screens/ChatBotScreen';
+
 import HomeScreen from './screens/HomeScreen';
+import SettingsScreen from './screens/SettingsScreen';
 import SummaryScreen from './screens/SummaryScreen';
 import PressureReliefScreen from './screens/PressureReliefScreen';
 import BladderSchedulerScreen from './screens/BladderSchedulerScreen';
 import FunctionalGoalsScreen from './screens/FunctionalGoalsScreen';
 import PainLogScreen from './screens/PainLogScreen';
 import CaregiverPortalScreen from './screens/CaregiverPortalScreen';
+import ChatCaregiverScreen from './screens/ChatCaregiverScreen';
 import MentalHealthScreen from './screens/MentalHealthScreen';
-
-import ChatLoginScreen from './screens/ChatLoginScreen';
-import CreateAccountScreen from './screens/CreateAccountScreen';
-import SubscriptionScreen from './screens/SubscriptionScreen';
-import ChatBotScreen from './screens/ChatBotScreen';
+import TermsScreen from './screens/TermsScreen';  // ← Make sure this file exists!
+import BankPaymentScreen from './screens/BankPaymentScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 
 const Stack = createStackNavigator();
 
@@ -24,12 +29,10 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        // Launch the ChatLogin screen first
         initialRouteName="ChatLogin"
         screenOptions={{
           headerStyle: { backgroundColor: '#007AFF' },
           headerTintColor: '#fff',
-          // Only show the back arrow, no label
           headerBackTitleVisible: true,
           headerBackTitle: 'Back',
           headerTitleStyle: {
@@ -67,6 +70,11 @@ export default function App() {
           options={{ title: 'MEdico' }}
         />
         <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{ title: 'Settings' }}
+        />
+        <Stack.Screen
           name="Summary"
           component={SummaryScreen}
           options={{ title: 'Progress Summary' }}
@@ -76,7 +84,7 @@ export default function App() {
           component={PressureReliefScreen}
           options={{
             title: 'Pressure-Relief Timer',
-            unmountOnBlur: false, // keep timer running when navigating away
+            unmountOnBlur: false,
           }}
         />
         <Stack.Screen
@@ -100,11 +108,32 @@ export default function App() {
           options={{ title: 'Caregiver Portal' }}
         />
         <Stack.Screen
+          name="ChatCA"
+          component={ChatCaregiverScreen}
+          options={{ title: 'Caregiver Chat' }}
+        />
+        <Stack.Screen
           name="MentalHealth"
           component={MentalHealthScreen}
           options={{ title: 'Mental Health & Journal' }}
         />
-      </Stack.Navigator>
-    </NavigationContainer>
+          {/* Your new Terms & Conditions screen */}
+          <Stack.Screen
+            name="Terms"
+            component={TermsScreen}
+            options={{ title: 'Terms & Conditions' }}
+          />
+          <Stack.Screen
+            name="BankPayment"
+            component={BankPaymentScreen}
+            options={{ title: 'Bank Authorization' }}
+          />
+          <Stack.Screen
+            name="ForgotPassword"
+            component={ForgotPasswordScreen}
+            options={{ title: 'Forgot Password' }}
+            />
+        </Stack.Navigator>
+      </NavigationContainer>
   );
 }
