@@ -91,6 +91,29 @@ export default function TermsScreen() {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>12. Account Deletion Policy</Text>
+        <Text style={styles.paragraph}>
+          You may request deletion of your account and all related data at any time. To do so, please:
+        </Text>
+        <Text style={styles.bullet}>• Open the MEdico app</Text>
+        <Text style={styles.bullet}>• Navigate to the Settings screen</Text>
+        <Text style={styles.bullet}>• Tap "Delete My Account"</Text>
+
+        <Text style={styles.paragraph}>
+          Alternatively, email us at <Text style={styles.link}>confam8@gmail.com</Text> with the subject line “Delete My Account”.
+        </Text>
+
+        <Text style={styles.paragraph}>Once your request is confirmed:</Text>
+        <Text style={styles.bullet}>• Your profile and personal health logs will be permanently deleted</Text>
+        <Text style={styles.bullet}>• We do not retain any user data beyond 30 days after deletion</Text>
+        <Text style={styles.bullet}>• Some logs (e.g., error reports) may remain anonymized for security auditing</Text>
+
+        <Text style={styles.paragraph}>
+          For further help, contact: <Text style={styles.link}>confam8@gmail.com</Text>
+        </Text>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.paragraph}>
           If you have any questions, please contact us at support@medico.app.
         </Text>
@@ -122,11 +145,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#333',
+    marginBottom: 8,
   },
   bullet: {
     fontSize: 14,
     lineHeight: 20,
     color: '#333',
-    marginLeft: 8,
+    marginLeft: 12,
+    marginBottom: 4,
+  },
+  link: {
+    color: '#007bff',
   },
 });
