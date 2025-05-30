@@ -1,12 +1,19 @@
 // screens/ChatCaregiverScreen.js
-import React, { useState, useEffect, useRef } from 'react';
+//
+// A sleeker, WhatsApp-style chat screen.
+//  • Rounded coloured bubbles
+//  • “Send” button with icon, disabled until text is entered
+//  • Keyboard-aware footer so the input never hides
+//  • Auto–scroll to bottom on new messages
+//
+
+import React, { useEffect, useState, useRef } from 'react';
 import {
-  SafeAreaView,
   View,
-  Text,
   TextInput,
-  TouchableOpacity,
   FlatList,
+  Text,
+  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -15,162 +22,174 @@ import { Ionicons } from '@expo/vector-icons';
 import { auth, firestore } from '../firebase';
 import {
   collection,
-  addDoc,
-  onSnapshot,
-  orderBy,
   query,
+  orderBy,
+  onSnapshot,
+  addDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 
+const CAREGIVER_PHONE = '+19788008478'; // pull from profile in production
+
 export default function ChatCaregiverScreen() {
   const [msg, setMsg] = useState('');
-  const [chat, setChat] = useState([]);
-  const flatRef = useRef();
-  const user = auth.currentUser;
+  const [messages, setMessages] = useState([]);
+  const listRef = useRef(null);
+  const uid = auth.currentUser?.uid;
 
+  /* ───── realtime listener ───── */
   useEffect(() => {
-    if (!user) return;
-    const q = query(
-      collection(firestore, 'users', user.uid, 'caregiverChats'),
-      orderBy('createdAt', 'asc')
+    if (!uid) return;
+    const col = collection(
+      firestore,
+      'users',
+      uid,
+      'caregiverChats',
+      CAREGIVER_PHONE,
+      'messages'
     );
-    return onSnapshot(q, snap =>
-      setChat(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-    );
-  }, [user]);
+    const q = query(col, orderBy('ts', 'asc'));
+    return onSnapshot(q, snap => {
+      setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      // auto scroll next frame
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
+    });
+  }, [uid]);
 
+  /* ───── send handler ───── */
   const send = async () => {
     if (!msg.trim()) return;
     await addDoc(
-      collection(firestore, 'users', user.uid, 'caregiverChats'),
-      {
-        text: msg.trim(),
-        sender: 'patient',
-        createdAt: serverTimestamp(),
-      }
+      collection(
+        firestore,
+        'users',
+        uid,
+        'caregiverChats',
+        CAREGIVER_PHONE,
+        'messages'
+      ),
+      { from: 'patient', text: msg.trim(), ts: serverTimestamp() }
     );
     setMsg('');
   };
 
-  const renderItem = ({ item }) => (
-    <View
-      style={[
-        styles.bubble,
-        item.sender === 'patient' ? styles.mine : styles.theirs,
-      ]}
-    >
-      <Text style={styles.bubbleText}>{item.text}</Text>
-    </View>
-  );
+  /* ───── message bubble ───── */
+  const renderItem = ({ item }) => {
+    const mine = item.from === 'patient';
+    return (
+      <View
+        style={[
+          styles.bubble,
+          mine ? styles.meBubble : styles.themBubble,
+        ]}
+      >
+        <Text style={mine ? styles.meText : styles.themText}>{item.text}</Text>
+      </View>
+    );
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.select({ ios: 90, android: 0 })}
-      >
-        <FlatList
-          ref={flatRef}
-          data={chat}
-          keyExtractor={i => i.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.chatContainer}
-          onContentSizeChange={() =>
-            flatRef.current?.scrollToEnd({ animated: true })
-          }
-        />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={80}
+    >
+      <FlatList
+        ref={listRef}
+        data={messages}
+        keyExtractor={i => i.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.list}
+      />
 
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            value={msg}
-            onChangeText={setMsg}
-            placeholder="Type your message..."
-            placeholderTextColor="#777"
-            onSubmitEditing={send}
-            returnKeyType="send"
+      <View style={styles.inputRow}>
+        <TextInput
+          style={styles.input}
+          value={msg}
+          onChangeText={setMsg}
+          placeholder="Type a message…"
+          placeholderTextColor="#999"
+          multiline
+        />
+        <TouchableOpacity
+          style={[
+            styles.sendBtn,
+            !msg.trim() && styles.sendBtnDisabled,
+          ]}
+          onPress={send}
+          disabled={!msg.trim()}
+        >
+          <Ionicons
+            name="send"
+            size={22}
+            color="#fff"
+            style={{ marginLeft: 1 }}
           />
-          <TouchableOpacity onPress={send} style={styles.sendBtn}>
-            <Ionicons name="send" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
+/* ───── styles ───── */
+const PRIMARY = '#007aff';
+const LIGHT_BG = '#f0f4ff';
+
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  container: {
-    flex: 1,
-    backgroundColor: '#E0F7FA',
-  },
-  header: {
-    height: 56,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3,
-  },
-  headerText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  chatContainer: {
-    padding: 12,
-    paddingBottom: 80, // leave room for input
-  },
+  container: { flex: 1, backgroundColor: '#fafafa' },
+  list: { padding: 14, paddingBottom: 4 },
+  /* bubbles */
   bubble: {
-    marginVertical: 4,
-    padding: 12,
-    borderRadius: 16,
     maxWidth: '80%',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    marginBottom: 10,
   },
-  mine: {
-    backgroundColor: '#3F51B5',
+  meBubble: {
+    backgroundColor: PRIMARY,
     alignSelf: 'flex-end',
-    borderBottomRightRadius: 0,
+    borderBottomRightRadius: 4,
   },
-  theirs: {
-    backgroundColor: '#9C27B0',
+  themBubble: {
+    backgroundColor: LIGHT_BG,
     alignSelf: 'flex-start',
-    borderBottomLeftRadius: 0,
+    borderBottomLeftRadius: 4,
   },
-  bubbleText: {
-    color: '#fff',
-    fontSize: 16,
-  },
+  meText: { color: '#fff', fontSize: 15 },
+  themText: { color: '#222', fontSize: 15 },
+  /* input row */
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
+    alignItems: 'flex-end',
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderTopWidth: 1,
-    borderColor: '#B2EBF2',
-    backgroundColor: '#E0F7FA',
+    backgroundColor: '#fff',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ddd',
   },
   input: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    maxHeight: 120,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#ccc',
     borderRadius: 20,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    fontSize: 16,
-    color: '#000',
-    borderWidth: 1,
-    borderColor: '#81D4FA',
+    fontSize: 15,
+    backgroundColor: '#fff',
   },
   sendBtn: {
     marginLeft: 8,
-    backgroundColor: '#007AFF',
-    borderRadius: 20,
-    padding: 12,
+    backgroundColor: PRIMARY,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    justifyContent: 'center',
+    alignItems: 'center',
     elevation: 2,
+  },
+  sendBtnDisabled: {
+    backgroundColor: '#a3c4ff',
   },
 });

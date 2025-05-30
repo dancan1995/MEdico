@@ -24,7 +24,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 
-// Configure notification handler
+// Configure notification handler with new flags
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -44,7 +44,7 @@ export default function PressureReliefScreen() {
 
   useEffect(() => {
     (async () => {
-      // request permissions & create channel
+      // 1) Request permissions & create Android channel
       if (Constants.isDevice) {
         let { status } = await Notifications.getPermissionsAsync();
         if (status !== 'granted') {
@@ -69,7 +69,7 @@ export default function PressureReliefScreen() {
         );
       }
 
-      // load persisted state
+      // 2) Load persisted timer state from Firestore
       if (user) {
         const ref = doc(
           firestore,
@@ -91,17 +91,18 @@ export default function PressureReliefScreen() {
       }
     })();
 
+    // cleanup timer only
     return () => clearInterval(timerRef.current);
   }, []);
 
-  // format seconds to MM:SS
+  // Format seconds into MM:SS
   const formatCountdown = secs => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = (secs % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
-  // loop helper
+  // Start the in-app countdown loop
   const startCountdownLoop = (initialSecs, mins) => {
     setRunning(true);
     setSecondsLeft(initialSecs);
@@ -118,6 +119,7 @@ export default function PressureReliefScreen() {
     }, 1000);
   };
 
+  // Schedule a repeating notification
   const scheduleNotification = async mins => {
     const trigger = {
       seconds: mins * 60,
@@ -136,19 +138,22 @@ export default function PressureReliefScreen() {
     return id;
   };
 
-  // start timer & notification
+  // Start button handler
   const startTimer = async () => {
     Keyboard.dismiss();
     const mins = parseInt(intervalMins, 10);
     if (!mins || mins <= 0) {
       return Alert.alert('Invalid interval', 'Enter a positive number.');
     }
+
     clearInterval(timerRef.current);
     if (notificationIdRef.current) {
       await Notifications.cancelScheduledNotificationAsync(
         notificationIdRef.current
       );
     }
+
+    // Persist to Firestore
     if (user) {
       await setDoc(
         doc(firestore, 'users', user.uid, 'settings', 'pressureTimer'),
@@ -159,12 +164,13 @@ export default function PressureReliefScreen() {
         }
       );
     }
+
     startCountdownLoop(mins * 60, mins);
     notificationIdRef.current = await scheduleNotification(mins);
     Alert.alert('Started', `Every ${mins} minutes`);
   };
 
-  // stop timer & cancel notification
+  // Stop button handler
   const stopTimer = async () => {
     Keyboard.dismiss();
     clearInterval(timerRef.current);
@@ -205,7 +211,6 @@ export default function PressureReliefScreen() {
           keyboardType="number-pad"
           value={intervalMins}
           onChangeText={setIntervalMins}
-          onFocus={() => {}}
         />
 
         <View style={styles.buttons}>

@@ -1,6 +1,7 @@
 {
   "projects": {
-    "medico-57cc8": "medico-57cc8"
+    "medico-57cc8": "medico-57cc8",
+    "default": "medico-57cc8"
   },
   "targets": {},
   "etags": {}

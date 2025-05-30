@@ -1,4 +1,5 @@
 // screens/ChatBotScreen.js
+
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import {
   View,
@@ -18,7 +19,7 @@ import { auth } from '../firebase';
 import { OPENAI_API_KEY } from '../config';
 
 export default function ChatBotScreen({ navigation }) {
-  // add logout to header
+  // add logout button to the header
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -53,7 +54,7 @@ export default function ChatBotScreen({ navigation }) {
   const [playingUri, setPlayingUri] = useState(null);
   const flatRef = useRef();
 
-  // text message send
+  // send text messages
   const sendMessage = async () => {
     const text = input.trim();
     if (!text) return;
@@ -63,18 +64,20 @@ export default function ChatBotScreen({ navigation }) {
       type: 'text',
       text,
     };
-    setMessages(m => [...m, userMsg]);
+    setMessages((m) => [...m, userMsg]);
     setInput('');
     setSending(true);
-    // prepare OpenAI payload
+
+    // build OpenAI conversation
     const apiMessages = [
       { role: 'system', content: 'You are a caring, empathetic mental health assistant.' },
-      ...messages.map(m => ({
+      ...messages.map((m) => ({
         role: m.from === 'user' ? 'user' : 'assistant',
         content: m.type === 'text' ? m.text : '[voice message]',
       })),
       { role: 'user', content: text },
     ];
+
     try {
       const resp = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -97,10 +100,10 @@ export default function ChatBotScreen({ navigation }) {
         type: 'text',
         text: botText,
       };
-      setMessages(m => [...m, botMsg]);
+      setMessages((m) => [...m, botMsg]);
     } catch (err) {
       console.error(err);
-      setMessages(m => [
+      setMessages((m) => [
         ...m,
         {
           id: `bot-${Date.now()}`,
@@ -115,7 +118,7 @@ export default function ChatBotScreen({ navigation }) {
     }
   };
 
-  // record audio
+  // start voice recording
   const startRecording = async () => {
     try {
       const { status } = await Audio.requestPermissionsAsync();
@@ -135,21 +138,22 @@ export default function ChatBotScreen({ navigation }) {
       console.error('Failed to start recording', err);
     }
   };
+
+  // stop recording and add to chat
   const stopRecording = async () => {
     if (!recording) return;
     try {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
-      // add voice message bubble
+
       const voiceMsg = {
         id: `user-voice-${Date.now()}`,
         from: 'user',
         type: 'audio',
         uri,
       };
-      setMessages(m => [...m, voiceMsg]);
-      // TODO: forward URI to backend or AI if desired
+      setMessages((m) => [...m, voiceMsg]);
     } catch (err) {
       console.error('Failed to stop recording', err);
     } finally {
@@ -157,14 +161,13 @@ export default function ChatBotScreen({ navigation }) {
     }
   };
 
-  // play a voice bubble
-  const playAudio = async uri => {
+  // play a voice message
+  const playAudio = async (uri) => {
     try {
       setPlayingUri(uri);
       const { sound } = await Audio.Sound.createAsync({ uri });
       await sound.playAsync();
-      // unload after playback
-      sound.setOnPlaybackStatusUpdate(status => {
+      sound.setOnPlaybackStatusUpdate((status) => {
         if (status.didJustFinish) {
           sound.unloadAsync();
           setPlayingUri(null);
@@ -175,12 +178,15 @@ export default function ChatBotScreen({ navigation }) {
     }
   };
 
-  // render text or audio bubble
+  // render each message bubble
   const renderItem = ({ item }) => {
     if (item.type === 'audio') {
       return (
         <TouchableOpacity
-          style={[styles.bubble, item.from === 'user' ? styles.userBubble : styles.botBubble]}
+          style={[
+            styles.bubble,
+            item.from === 'user' ? styles.userBubble : styles.botBubble,
+          ]}
           onPress={() => playAudio(item.uri)}
         >
           <Ionicons
@@ -188,14 +194,17 @@ export default function ChatBotScreen({ navigation }) {
             size={24}
             color={item.from === 'user' ? '#fff' : '#333'}
           />
-          <Text style={[styles.bubbleText, { marginLeft: 8 }]}>
-            Voice Message
-          </Text>
+          <Text style={[styles.bubbleText, { marginLeft: 8 }]}>Voice Message</Text>
         </TouchableOpacity>
       );
     }
     return (
-      <View style={[styles.bubble, item.from === 'user' ? styles.userBubble : styles.botBubble]}>
+      <View
+        style={[
+          styles.bubble,
+          item.from === 'user' ? styles.userBubble : styles.botBubble,
+        ]}
+      >
         <Text style={styles.bubbleText}>{item.text}</Text>
       </View>
     );
@@ -210,7 +219,7 @@ export default function ChatBotScreen({ navigation }) {
       <FlatList
         ref={flatRef}
         data={messages}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.chatContainer}
       />
@@ -222,7 +231,7 @@ export default function ChatBotScreen({ navigation }) {
       )}
 
       <View style={styles.inputRow}>
-        {/* mic button: hold to record */}
+        {/* hold to record */}
         <TouchableOpacity
           onPressIn={startRecording}
           onPressOut={stopRecording}

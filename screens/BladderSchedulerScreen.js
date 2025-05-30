@@ -9,21 +9,22 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
+// ── Updated notification handler ──
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,       // replaces deprecated shouldShowAlert
+    shouldShowList: true,         // show in notification list
+    shouldPlaySound: true,        // still supported
+    shouldSetBadge: false,        // still supported
+  }),
+});
+
 import { auth, firestore } from '../firebase';
 import {
   collection, query, orderBy, onSnapshot,
   addDoc, serverTimestamp, doc, updateDoc,
   deleteDoc
 } from 'firebase/firestore';
-
-// Make sure notifications show in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
 
 export default function BladderSchedulerScreen() {
   const [selectedTime, setSelectedTime] = useState(new Date());

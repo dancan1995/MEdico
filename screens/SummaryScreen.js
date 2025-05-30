@@ -1,4 +1,8 @@
 // screens/SummaryScreen.js
+//
+// Reads the local JSON file via patientDataStore, sends the JSON to OpenAI,
+// then displays an overview + recommendations.
+
 import React, { useState } from 'react';
 import {
   View,
@@ -9,49 +13,88 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { functions } from '../firebase';
 
+import { auth } from '../firebase';
+import { readData } from '../utils/patientDataStore';
+import { OPENAI_API_KEY } from '../config';
+
+/* ─────────────────────────── OpenAI helper ────────────────────────── */
+const summarizeWithOpenAI = async (patientData) => {
+  const prompt = `
+You are a clinical assistant. Using the structured JSON patient data below,
+write:
+1. A concise progress overview (≤120 words).
+2. 5–7 bullet-point recommendations for the next two weeks.
+
+JSON:
+${JSON.stringify(patientData, null, 2)}
+`;
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'You are a helpful healthcare assistant.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.4,
+      max_tokens: 512,
+    }),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`OpenAI error (${res.status}): ${txt}`);
+  }
+  const json = await res.json();
+  return json.choices?.[0]?.message?.content ?? '';
+};
+
+/* ─────────────────────────── Component ───────────────────────────── */
 export default function SummaryScreen() {
   const [loading, setLoading] = useState(false);
   const [overview, setOverview] = useState('');
   const [recommendations, setRecommendations] = useState([]);
 
-  const fetchSummary = async () => {
+  const generateSummary = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Not signed in', 'Please log in again.');
+      return;
+    }
+
     setLoading(true);
     setOverview('');
     setRecommendations([]);
 
     try {
-      const call = functions.httpsCallable('summarizeProgress');
-      const { data } = await call();
-      const fullText = data.result || '';
+      /* 1️⃣  Read local JSON */
+      const patientData = await readData();
 
-      // Split into overview vs numbered recommendations
-      const lines = fullText.split('\n');
+      /* 2️⃣  Summarize with OpenAI */
+      const fullText = await summarizeWithOpenAI(patientData);
+
+      /* 3️⃣  Split overview vs bullets */
       const ov = [];
       const recs = [];
-      let inRecs = false;
-
-      lines.forEach(line => {
-        const trimmed = line.trim();
-        if (/^\d+\.\s*/.test(trimmed)) {
-          inRecs = true;
-          recs.push(trimmed.replace(/^\d+\.\s*/, ''));
-        } else if (inRecs && trimmed) {
-          // continuation of a recommendation
-          recs.push(trimmed);
-        } else if (!inRecs && trimmed) {
-          ov.push(trimmed);
-        }
+      fullText.split('\n').forEach((line) => {
+        const t = line.trim();
+        if (/^(\d+\.|[-*•])\s/.test(t))
+          recs.push(t.replace(/^(\d+\.|[-*•])\s*/, ''));
+        else if (t) ov.push(t);
       });
 
       setOverview(ov.join(' '));
       setRecommendations(recs);
     } catch (err) {
-      console.error('summarizeProgress failed:', err);
+      console.error(err);
       Alert.alert(
         'Summary Error',
-        err.message || 'An unexpected error occurred while generating the summary.'
+        err.message || 'Unable to generate summary.'
       );
       setOverview('Error generating summary.');
     } finally {
@@ -59,27 +102,28 @@ export default function SummaryScreen() {
     }
   };
 
+  /* ─────────────────────────── UI ──────────────────────────────── */
   return (
     <View style={styles.container}>
       <Button
         title="Generate Progress Summary"
-        onPress={fetchSummary}
+        onPress={generateSummary}
         disabled={loading}
       />
       {loading && <ActivityIndicator style={{ margin: 16 }} />}
 
-      {overview ? (
+      {!!overview && (
         <ScrollView style={styles.resultBox}>
           <Text style={styles.heading}>Overview</Text>
           <Text style={styles.resultText}>{overview}</Text>
         </ScrollView>
-      ) : null}
+      )}
 
       {recommendations.length > 0 && (
         <View style={styles.resultBox}>
           <Text style={styles.heading}>Recommendations</Text>
           {recommendations.map((r, i) => (
-            <Text key={i} style={styles.recItem}>
+            <Text key={`rec-${i}`} style={styles.recItem}>
               • {r}
             </Text>
           ))}
@@ -89,6 +133,7 @@ export default function SummaryScreen() {
   );
 }
 
+/* ─────────────────────────── styles ────────────────────────────── */
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   resultBox: {
