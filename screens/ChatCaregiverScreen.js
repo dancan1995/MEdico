@@ -183,7 +183,7 @@ export default function ChatCaregiverScreen() {
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         />
 
-        <View style={[styles.inputRow, { paddingBottom: 4 }]}>
+        <View style={[styles.inputRow, { paddingBottom: 12 }]}>
           <TextInput
             style={styles.input}
             placeholder="Type your message…"

@@ -1,5 +1,4 @@
-// screens/PainLogScreen.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +9,9 @@ import {
   Alert,
   TouchableOpacity,
   Dimensions,
+  ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { auth, firestore } from '../firebase';
 import {
@@ -28,9 +30,10 @@ export default function PainLogScreen() {
   const [rating, setRating] = useState('');
   const [logs, setLogs] = useState([]);
   const [showChart, setShowChart] = useState(false);
+  const scrollRef = useRef(null);
   const user = auth.currentUser;
 
-  // Subscribe to Firestore on mount
+  // Fetch logs
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -54,6 +57,7 @@ export default function PainLogScreen() {
     return unsub;
   }, [user]);
 
+  // Add log
   const addLog = async () => {
     if (!type.trim() || !location.trim() || !rating.trim()) {
       return Alert.alert('Missing fields', 'Fill out all three fields.');
@@ -96,85 +100,113 @@ export default function PainLogScreen() {
     </View>
   );
 
-  // prepare data for chart
+  const recentLogs = logs.slice().reverse().slice(-10);
   const chartData = {
-    labels: logs
-      .map(l => l.createdAt.toLocaleDateString())
-      .reverse()
-      .slice(0, 10), // last 10 entries
+    labels: recentLogs.map(l =>
+      l.createdAt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })
+    ),
     datasets: [
       {
-        data: logs.map(l => l.rating).reverse().slice(0, 10),
+        data: recentLogs.map(l => l.rating),
       },
     ],
   };
 
-  const screenWidth = Dimensions.get('window').width - 32;
+  const chartWidth = Math.max(Dimensions.get('window').width - 32, recentLogs.length * 60);
 
   return (
-    <View style={styles.container}>
-      {/* input form */}
-      <Text style={styles.label}>Pain Type:</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. Neuropathic"
-        value={type}
-        onChangeText={setType}
-      />
-
-      <Text style={styles.label}>Location:</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. Lower back"
-        value={location}
-        onChangeText={setLocation}
-      />
-
-      <Text style={styles.label}>Intensity (1–10):</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. 5"
-        keyboardType="number-pad"
-        value={rating}
-        onChangeText={setRating}
-      />
-
-      <Button title="Add Entry" onPress={addLog} />
-
-      <View style={styles.buttonsRow}>
-        <Button
-          title={showChart ? 'Hide Trends' : 'Show Trends'}
-          onPress={() => setShowChart(v => !v)}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+        <Text style={styles.label}>Pain Type:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. Neuropathic"
+          value={type}
+          onChangeText={setType}
         />
-      </View>
 
-      {showChart && logs.length > 0 && (
-        <LineChart
-          data={chartData}
-          width={screenWidth}
-          height={220}
-          chartConfig={{
-            backgroundColor: '#fff',
-            backgroundGradientFrom: '#fafafa',
-            backgroundGradientTo: '#fafafa',
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-            style: { borderRadius: 8 },
-            propsForDots: { r: '4', strokeWidth: '2', stroke: '#007AFF' },
-          }}
-          style={{ marginVertical: 16, borderRadius: 8 }}
+        <Text style={styles.label}>Location:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. Lower back"
+          value={location}
+          onChangeText={setLocation}
         />
-      )}
 
-      <Text style={styles.subheader}>Logs</Text>
-      <FlatList
-        data={logs}
-        keyExtractor={i => i.id}
-        renderItem={renderItem}
-        ListEmptyComponent={<Text style={styles.empty}>No logs yet.</Text>}
-      />
-    </View>
+        <Text style={styles.label}>Intensity (1–10):</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. 5"
+          keyboardType="number-pad"
+          value={rating}
+          onChangeText={setRating}
+        />
+
+        <Button title="Add Entry" onPress={addLog} />
+
+        <View style={styles.buttonsRow}>
+          <Button
+            title={showChart ? 'Hide Trends' : 'Show Trends'}
+            onPress={() => {
+              const next = !showChart;
+              setShowChart(next);
+              if (next) {
+                setTimeout(() => {
+                  scrollRef.current?.scrollToEnd({ animated: true });
+                }, 300);
+              }
+            }}
+          />
+        </View>
+
+        {showChart && recentLogs.length > 0 && (
+          <View style={styles.chartRow}>
+            <View style={styles.yAxisLabelContainer}>
+              <Text style={styles.yAxisLabel}></Text>
+            </View>
+            <ScrollView
+              horizontal
+              ref={scrollRef}
+              showsHorizontalScrollIndicator
+              style={{ marginBottom: 16 }}
+            >
+              <LineChart
+                data={chartData}
+                width={chartWidth}
+                height={220}
+                fromZero
+                yAxisInterval={1}
+                yLabelsOffset={8}
+                withInnerLines
+                chartConfig={{
+                  backgroundGradientFrom: '#fafafa',
+                  backgroundGradientTo: '#fafafa',
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+                  labelColor: () => '#333',
+                  propsForDots: {
+                    r: '4',
+                    strokeWidth: '2',
+                    stroke: '#007AFF',
+                  },
+                }}
+                bezier
+                style={styles.chart}
+              />
+            </ScrollView>
+          </View>
+        )}
+
+        <Text style={styles.subheader}>Logs</Text>
+        <FlatList
+          data={logs}
+          keyExtractor={i => i.id}
+          renderItem={renderItem}
+          ListEmptyComponent={<Text style={styles.empty}>No logs yet.</Text>}
+          scrollEnabled={false}
+        />
+      </ScrollView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -192,6 +224,27 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
     alignItems: 'flex-start',
+  },
+  chart: {
+    borderRadius: 8,
+    marginVertical: 8,
+  },
+  chartRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  yAxisLabelContainer: {
+    width: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+  },
+  yAxisLabel: {
+    transform: [{ rotate: '90deg' }],
+    fontSize: 14,
+    color: '#333',
+    textAlign: 'center',
   },
   subheader: { marginTop: 16, fontSize: 18, fontWeight: '500' },
   logItem: {

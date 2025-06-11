@@ -1,5 +1,3 @@
-// screens/ChatBotScreen.js
-
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import {
   View,
@@ -15,7 +13,6 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../firebase';
 import { OPENAI_API_KEY } from '../config';
@@ -53,8 +50,6 @@ export default function ChatBotScreen({ navigation }) {
     },
   ]);
   const [sending, setSending] = useState(false);
-  const [recording, setRecording] = useState(null);
-  const [playingUri, setPlayingUri] = useState(null);
   const flatRef = useRef();
 
   const sendMessage = async () => {
@@ -119,93 +114,16 @@ export default function ChatBotScreen({ navigation }) {
     }
   };
 
-  const startRecording = async () => {
-    try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Microphone access is required.');
-        return;
-      }
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-      const rec = new Audio.Recording();
-      await rec.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
-      await rec.startAsync();
-      setRecording(rec);
-    } catch (err) {
-      console.error('Failed to start recording', err);
-    }
-  };
-
-  const stopRecording = async () => {
-    if (!recording) return;
-    try {
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      setRecording(null);
-
-      const voiceMsg = {
-        id: `user-voice-${Date.now()}`,
-        from: 'user',
-        type: 'audio',
-        uri,
-      };
-      setMessages((m) => [...m, voiceMsg]);
-    } catch (err) {
-      console.error('Failed to stop recording', err);
-    } finally {
-      flatRef.current?.scrollToEnd({ animated: true });
-    }
-  };
-
-  const playAudio = async (uri) => {
-    try {
-      setPlayingUri(uri);
-      const { sound } = await Audio.Sound.createAsync({ uri });
-      await sound.playAsync();
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          sound.unloadAsync();
-          setPlayingUri(null);
-        }
-      });
-    } catch (err) {
-      console.error('Playback error', err);
-    }
-  };
-
-  const renderItem = ({ item }) => {
-    if (item.type === 'audio') {
-      return (
-        <TouchableOpacity
-          style={[
-            styles.bubble,
-            item.from === 'user' ? styles.userBubble : styles.botBubble,
-          ]}
-          onPress={() => playAudio(item.uri)}
-        >
-          <Ionicons
-            name={playingUri === item.uri ? 'pause' : 'play'}
-            size={24}
-            color={item.from === 'user' ? '#fff' : '#333'}
-          />
-          <Text style={[styles.bubbleText, { marginLeft: 8 }]}>Voice Message</Text>
-        </TouchableOpacity>
-      );
-    }
-    return (
-      <View
-        style={[
-          styles.bubble,
-          item.from === 'user' ? styles.userBubble : styles.botBubble,
-        ]}
-      >
-        <Text style={styles.bubbleText}>{item.text}</Text>
-      </View>
-    );
-  };
+  const renderItem = ({ item }) => (
+    <View
+      style={[
+        styles.bubble,
+        item.from === 'user' ? styles.userBubble : styles.botBubble,
+      ]}
+    >
+      <Text style={styles.bubbleText}>{item.text}</Text>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -228,19 +146,7 @@ export default function ChatBotScreen({ navigation }) {
           </View>
         )}
 
-        <View style={[styles.inputRow, { paddingBottom: insets.bottom || 12 }]}>
-          <TouchableOpacity
-            onPressIn={startRecording}
-            onPressOut={stopRecording}
-            style={styles.micButton}
-          >
-            <Ionicons
-              name={recording ? 'mic-off-outline' : 'mic-outline'}
-              size={24}
-              color={recording ? '#f44336' : '#007AFF'}
-            />
-          </TouchableOpacity>
-
+        <View style={[styles.inputRow, { paddingBottom: 12 }]}>
           <TextInput
             style={styles.input}
             placeholder="Type your message..."
@@ -303,10 +209,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#ddd',
     backgroundColor: '#fff',
-  },
-  micButton: {
-    padding: 8,
-    marginRight: 4,
   },
   input: {
     flex: 1,
