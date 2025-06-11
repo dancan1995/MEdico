@@ -16,11 +16,14 @@ import { doc, getDoc } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
 export default function SettingsScreen({ navigation }) {
+  /*
   const [remindersEnabled, setRemindersEnabled] = useState(true);
   const [currentPlan, setCurrentPlan] = useState('—');
   const [notificationTone, setNotificationTone] = useState('Default');
+  */
 
   // load settings & subscription on mount
+  /*
   useEffect(() => {
     (async () => {
       const re = await AsyncStorage.getItem('enableReminders');
@@ -38,15 +41,19 @@ export default function SettingsScreen({ navigation }) {
       }
     })();
   }, []);
+  */
 
   // toggle reminders on/off
+  /*
   const toggleReminders = async (value) => {
     setRemindersEnabled(value);
     await AsyncStorage.setItem('enableReminders', value.toString());
     Alert.alert('Reminders', value ? 'Enabled' : 'Disabled');
   };
+  */
 
   // choose notification tone
+  /*
   const changeTone = () => {
     Alert.alert(
       'Select Notification Tone',
@@ -66,6 +73,7 @@ export default function SettingsScreen({ navigation }) {
     await AsyncStorage.setItem('notificationTone', tone);
     Alert.alert('Notification Tone', `Set to "${tone}"`);
   };
+  */
 
   // send password reset link
   const handleResetPassword = () => {
@@ -94,8 +102,8 @@ export default function SettingsScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.clear();
-            setRemindersEnabled(true);
-            setNotificationTone('Default');
+            // setRemindersEnabled(true);
+            // setNotificationTone('Default');
             Alert.alert('Done', 'Local data cleared.');
           },
         },
@@ -117,7 +125,9 @@ export default function SettingsScreen({ navigation }) {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Settings</Text>
 
-      {/* Reminders toggle */}
+      {/*
+      // ──────────────────────────────────────────────
+      // Bladder & Pressure Reminders (disabled)
       <View style={styles.row}>
         <Text style={styles.label}>Bladder & Pressure Reminders</Text>
         <Switch
@@ -125,14 +135,20 @@ export default function SettingsScreen({ navigation }) {
           onValueChange={toggleReminders}
         />
       </View>
+      */}
 
-      {/* Notification tone */}
+      {/*
+      // ──────────────────────────────────────────────
+      // Notification Tone (disabled)
       <TouchableOpacity style={styles.row} onPress={changeTone}>
         <Text style={styles.label}>Notification Tone</Text>
         <Text style={styles.value}>{notificationTone} ▸</Text>
       </TouchableOpacity>
+      */}
 
-      {/* Subscription plan */}
+      {/*
+      // ──────────────────────────────────────────────
+      // Current Plan (disabled)
       <TouchableOpacity
         style={styles.row}
         onPress={() => navigation.navigate('Subscription')}
@@ -140,6 +156,7 @@ export default function SettingsScreen({ navigation }) {
         <Text style={styles.label}>Current Plan</Text>
         <Text style={styles.value}>{currentPlan} ▸</Text>
       </TouchableOpacity>
+      */}
 
       {/* Reset password */}
       <View style={styles.row}>
@@ -165,10 +182,11 @@ export default function SettingsScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Export data */}
+      {/* Export data 
       <TouchableOpacity style={styles.fullRow} onPress={handleExportData}>
         <Text style={styles.fullLabel}>Export My Data</Text>
       </TouchableOpacity>
+      */}
 
       {/* About */}
       <TouchableOpacity

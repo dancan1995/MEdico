@@ -12,14 +12,17 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../firebase';
 import { OPENAI_API_KEY } from '../config';
 
 export default function ChatBotScreen({ navigation }) {
-  // add logout button to the header
+  const insets = useSafeAreaInsets();
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -54,7 +57,6 @@ export default function ChatBotScreen({ navigation }) {
   const [playingUri, setPlayingUri] = useState(null);
   const flatRef = useRef();
 
-  // send text messages
   const sendMessage = async () => {
     const text = input.trim();
     if (!text) return;
@@ -68,7 +70,6 @@ export default function ChatBotScreen({ navigation }) {
     setInput('');
     setSending(true);
 
-    // build OpenAI conversation
     const apiMessages = [
       { role: 'system', content: 'You are a caring, empathetic mental health assistant.' },
       ...messages.map((m) => ({
@@ -118,7 +119,6 @@ export default function ChatBotScreen({ navigation }) {
     }
   };
 
-  // start voice recording
   const startRecording = async () => {
     try {
       const { status } = await Audio.requestPermissionsAsync();
@@ -139,7 +139,6 @@ export default function ChatBotScreen({ navigation }) {
     }
   };
 
-  // stop recording and add to chat
   const stopRecording = async () => {
     if (!recording) return;
     try {
@@ -161,7 +160,6 @@ export default function ChatBotScreen({ navigation }) {
     }
   };
 
-  // play a voice message
   const playAudio = async (uri) => {
     try {
       setPlayingUri(uri);
@@ -178,7 +176,6 @@ export default function ChatBotScreen({ navigation }) {
     }
   };
 
-  // render each message bubble
   const renderItem = ({ item }) => {
     if (item.type === 'audio') {
       return (
@@ -211,59 +208,70 @@ export default function ChatBotScreen({ navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.select({ ios: 'padding', android: null })}
-      keyboardVerticalOffset={Platform.select({ ios: 90, android: 0 })}
-    >
-      <FlatList
-        ref={flatRef}
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.chatContainer}
-      />
-
-      {sending && (
-        <View style={styles.loading}>
-          <ActivityIndicator size="small" color="#555" />
-        </View>
-      )}
-
-      <View style={styles.inputRow}>
-        {/* hold to record */}
-        <TouchableOpacity
-          onPressIn={startRecording}
-          onPressOut={stopRecording}
-          style={styles.micButton}
-        >
-          <Ionicons
-            name={recording ? 'mic-off-outline' : 'mic-outline'}
-            size={24}
-            color={recording ? '#f44336' : '#007AFF'}
-          />
-        </TouchableOpacity>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Type your message..."
-          placeholderTextColor="#999"
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={sendMessage}
-          returnKeyType="send"
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.select({ ios: 'padding', android: 'height' })}
+        keyboardVerticalOffset={Platform.select({ ios: 90, android: 80 })}
+      >
+        <FlatList
+          ref={flatRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.chatContainer}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-          <Ionicons name="send" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+
+        {sending && (
+          <View style={styles.loading}>
+            <ActivityIndicator size="small" color="#555" />
+          </View>
+        )}
+
+        <View style={[styles.inputRow, { paddingBottom: insets.bottom || 12 }]}>
+          <TouchableOpacity
+            onPressIn={startRecording}
+            onPressOut={stopRecording}
+            style={styles.micButton}
+          >
+            <Ionicons
+              name={recording ? 'mic-off-outline' : 'mic-outline'}
+              size={24}
+              color={recording ? '#f44336' : '#007AFF'}
+            />
+          </TouchableOpacity>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Type your message..."
+            placeholderTextColor="#999"
+            value={input}
+            onChangeText={setInput}
+            onSubmitEditing={sendMessage}
+            returnKeyType="send"
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+            <Ionicons name="send" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f6f6f6' },
-  chatContainer: { padding: 12, paddingBottom: 24 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f6f6f6',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f6f6f6',
+  },
+  chatContainer: {
+    padding: 12,
+    paddingBottom: 16,
+  },
   bubble: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -282,11 +290,16 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     borderBottomLeftRadius: 0,
   },
-  bubbleText: { fontSize: 16, lineHeight: 22, color: '#333' },
+  bubbleText: {
+    fontSize: 16,
+    lineHeight: 22,
+    color: '#333',
+  },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
+    paddingHorizontal: 8,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderColor: '#ddd',
     backgroundColor: '#fff',

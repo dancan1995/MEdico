@@ -24,7 +24,9 @@
     ],
     "plugins": [
       "expo-web-browser",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-audio",
+      "expo-video"
     ],
     "ios": {
       "bundleIdentifier": "com.eatad.medico",

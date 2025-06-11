@@ -134,7 +134,7 @@ export default function HomeScreen({ navigation }) {
       {/* Chat+AI FAB */}
       <TouchableOpacity
         style={styles.chatFab}
-        onPress={() => navigation.navigate('Subscription')}
+        onPress={() => navigation.navigate('ChatBot')}   // Will change to subscription later
         activeOpacity={0.7}
       >
         <Svg

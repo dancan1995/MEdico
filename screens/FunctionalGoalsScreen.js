@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { auth, firestore } from '../firebase';
 import {
   collection,
@@ -45,9 +46,9 @@ export default function FunctionalGoalsScreen() {
   const [newDate, setNewDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
 
+  const insets = useSafeAreaInsets();
   const user = auth.currentUser;
 
-  // Subscribe to Firestore goals
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -76,12 +77,10 @@ export default function FunctionalGoalsScreen() {
     return unsubscribe;
   }, [user]);
 
-  // Animate layout changes
   const animate = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
   };
 
-  // Add new goal
   const saveGoal = async () => {
     const text = newText.trim();
     if (!text) {
@@ -114,7 +113,6 @@ export default function FunctionalGoalsScreen() {
     setNewDate(new Date());
   };
 
-  // Toggle completion
   const toggleDone = async goal => {
     animate();
     try {
@@ -136,7 +134,6 @@ export default function FunctionalGoalsScreen() {
     }
   };
 
-  // Delete goal
   const removeGoal = id => {
     Alert.alert(
       'Delete goal?',
@@ -166,16 +163,11 @@ export default function FunctionalGoalsScreen() {
     );
   };
 
-  // Format date
-  const fmtDate = date =>
-    date ? date.toLocaleDateString() : '';
-
-  // Compute stats
+  const fmtDate = date => date ? date.toLocaleDateString() : '';
   const total = goals.length;
   const doneCount = goals.filter(g => g.completed).length;
   const progress = total ? doneCount / total : 0;
 
-  // Render each goal
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={[styles.goalItem, item.completed && styles.completedItem]}
@@ -189,9 +181,7 @@ export default function FunctionalGoalsScreen() {
         color={item.completed ? '#4caf50' : '#007AFF'}
       />
       <View style={styles.goalTextContainer}>
-        <Text
-          style={[styles.goalText, item.completed && styles.goalTextDone]}
-        >
+        <Text style={[styles.goalText, item.completed && styles.goalTextDone]}>
           {item.text}
         </Text>
         <Text style={styles.goalDate}>Due: {fmtDate(item.dueDate)}</Text>
@@ -201,31 +191,18 @@ export default function FunctionalGoalsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <Text style={styles.header}>Rehab Goals</Text>
-      {/* Stats */}
       <View style={styles.statsRow}>
         <Text style={styles.statsText}>
           Completed {doneCount} of {total}
         </Text>
         <View style={styles.progressBar}>
-          <View
-            style={[
-              styles.progressFill,
-              { flex: progress },
-            ]}
-          />
-          <View
-            style={[
-              styles.progressEmpty,
-              { flex: 1 - progress },
-            ]}
-          />
+          <View style={[styles.progressFill, { flex: progress }]} />
+          <View style={[styles.progressEmpty, { flex: 1 - progress }]} />
         </View>
       </View>
-      {/* List */}
       <FlatList
-        data={goals.sort((a,b) => (a.dueDate||0) - (b.dueDate||0))}
+        data={goals.sort((a, b) => (a.dueDate || 0) - (b.dueDate || 0))}
         keyExtractor={item => item.id}
         renderItem={renderItem}
         ListEmptyComponent={
@@ -235,16 +212,16 @@ export default function FunctionalGoalsScreen() {
         }
         contentContainerStyle={{ paddingBottom: 80 }}
       />
-      {/* Add Button */}
       <TouchableOpacity
         style={styles.addFab}
         onPress={() => setModalVisible(true)}
       >
         <Ionicons name="add-circle" size={56} color="#007AFF" />
       </TouchableOpacity>
-      {/* Modal */}
+
+      {/* Modal with SafeAreaView to prevent overlapping the time/status bar */}
       <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modal}>
+        <SafeAreaView style={[styles.modal, { paddingTop: insets.top }]}>
           <Text style={styles.modalHeader}>New Goal</Text>
           <TextInput
             style={styles.input}
@@ -283,7 +260,7 @@ export default function FunctionalGoalsScreen() {
               }}
             />
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
     </View>
   );
