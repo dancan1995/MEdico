@@ -1,11 +1,9 @@
-// screens/CreateAccountScreen.js
 import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -27,6 +25,7 @@ export default function CreateAccountScreen({ navigation }) {
   const [showPicker, setShowPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [signupError, setSignupError] = useState('');
 
   const checkEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
@@ -51,32 +50,40 @@ export default function CreateAccountScreen({ navigation }) {
   };
 
   const handleSignup = async () => {
+    setSignupError('');
     const e = email.trim().toLowerCase();
     if (!e || !dob || !password || !confirm) {
-      return Alert.alert('Missing fields', 'Please fill out all fields.');
+      return setSignupError('Please fill out all fields.');
     }
     if (!checkEmail(e)) {
-      return Alert.alert('Invalid email', 'Enter a valid email address.');
+      return setSignupError('Enter a valid email address.');
     }
     if (!dateRegex.test(dob)) {
-      return Alert.alert('Invalid Date', 'Date must be in MM-DD-YYYY format.');
+      return setSignupError('Date must be in MM-DD-YYYY format.');
     }
     if (password !== confirm) {
-      return Alert.alert('Password mismatch', 'Both passwords must match.');
+      return setSignupError('Both passwords must match.');
     }
     if (!acceptedTerms) {
-      return Alert.alert('Terms & Conditions', 'You must accept our Terms & Conditions to proceed.');
+      return setSignupError('You must accept our Terms & Conditions to proceed.');
     }
+
     try {
       const { user } = await createUserWithEmailAndPassword(auth, e, password);
+
       await setDoc(doc(firestore, 'users', user.uid), {
         email: user.email,
         dateOfBirth: dob,
         createdAt: serverTimestamp(),
       });
+
       navigation.replace('ChatLogin', { fromSignup: true });
     } catch (err) {
-      Alert.alert('Signup Error', err.message);
+      if (err.code === 'auth/email-already-in-use') {
+        setSignupError('This email is already in use.');
+      } else {
+        setSignupError(err.message);
+      }
     }
   };
 
@@ -90,6 +97,9 @@ export default function CreateAccountScreen({ navigation }) {
 
         <Text style={styles.header}>Create Your Account</Text>
 
+        {/* Error Display */}
+        {signupError ? <Text style={styles.errorText}>{signupError}</Text> : null}
+
         <TextInput
           style={styles.input}
           placeholder="Email address"
@@ -100,7 +110,6 @@ export default function CreateAccountScreen({ navigation }) {
           onChangeText={setEmail}
         />
 
-        {/* DOB Section */}
         <View style={styles.dobRow}>
           <TextInput
             style={[styles.input, { flex: 1 }]}
@@ -110,15 +119,11 @@ export default function CreateAccountScreen({ navigation }) {
             value={dob}
             onChangeText={setDob}
           />
-          <TouchableOpacity
-            style={styles.dobButton}
-            onPress={toggleDatePicker}
-          >
+          <TouchableOpacity style={styles.dobButton} onPress={toggleDatePicker}>
             <Ionicons name="calendar-outline" size={24} color="#007AFF" />
           </TouchableOpacity>
         </View>
 
-        {/* Android spinner in modal */}
         {Platform.OS === 'android' && showPicker && (
           <Modal transparent animationType="fade" visible={showPicker}>
             <TouchableOpacity
@@ -139,7 +144,6 @@ export default function CreateAccountScreen({ navigation }) {
           </Modal>
         )}
 
-        {/* iOS spinner */}
         {Platform.OS === 'ios' && showPicker && (
           <DateTimePicker
             value={selectedDate}
@@ -181,10 +185,7 @@ export default function CreateAccountScreen({ navigation }) {
           />
           <Text style={styles.termsText}>
             I agree to the{' '}
-            <Text
-              style={styles.link}
-              onPress={() => navigation.navigate('Terms')}
-            >
+            <Text style={styles.link} onPress={() => navigation.navigate('Terms')}>
               Terms & Conditions
             </Text>
           </Text>
@@ -226,8 +227,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
     color: '#333',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 12,
   },
   input: {
     backgroundColor: '#f2f2f2',

@@ -1,11 +1,9 @@
-// screens/ChatLoginScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   Image,
   KeyboardAvoidingView,
@@ -26,8 +24,8 @@ export default function ChatLoginScreen({ navigation, route }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState('');
 
-  // Only auto-redirect on mount if NOT coming from signup flow
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(user => {
       if (user && !route.params?.fromSignup) {
@@ -38,38 +36,45 @@ export default function ChatLoginScreen({ navigation, route }) {
   }, [navigation, route.params]);
 
   const handleLogin = async () => {
+    setError('');
     if (!email || !password) {
-      return Alert.alert(
-        'Missing fields',
-        'Please enter both your email and password.'
-      );
+      setError('Please enter both your email and password.');
+      return;
     }
+
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
+
+      // Block login if email is not verified
+      if (!user.emailVerified) {
+        await auth.currentUser.sendEmailVerification();
+        await auth.signOut();
+        setError('A verification link has been sent to your email. Please verify before logging in.');
+        return;
+      }
+
       navigation.replace('Home');
     } catch (err) {
-      Alert.alert('Login Error', err.message);
+      setError('Incorrect email or password.');
     } finally {
       setLoading(false);
     }
   };
 
   const handlePasswordReset = () => {
+    setError('');
     if (!email) {
-      return Alert.alert(
-        'Enter email',
-        'Please enter your email address to reset your password.'
-      );
+      setError('Enter your email address to reset your password.');
+      return;
     }
+
     sendPasswordResetEmail(auth, email.trim())
-      .then(() =>
-        Alert.alert(
-          'Reset Email Sent',
-          'Check your inbox for a password reset link.'
-        )
-      )
-      .catch(err => Alert.alert('Error', err.message));
+      .then(() => {
+        setError('');
+        alert('Check your inbox for a password reset link.');
+      })
+      .catch(err => setError(err.message));
   };
 
   return (
@@ -84,6 +89,11 @@ export default function ChatLoginScreen({ navigation, route }) {
         />
 
         <Text style={styles.header}>Welcome back to MEdico</Text>
+
+        {/* Error Message */}
+        {error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : null}
 
         {/* Email Input */}
         <View style={styles.inputWrapper}>
@@ -123,7 +133,7 @@ export default function ChatLoginScreen({ navigation, route }) {
         </View>
 
         {/* Forgot Password */}
-        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+        <TouchableOpacity onPress={handlePasswordReset}>
           <Text style={styles.forgot}>Forgot password?</Text>
         </TouchableOpacity>
 
@@ -144,7 +154,6 @@ export default function ChatLoginScreen({ navigation, route }) {
         <TouchableOpacity
           style={styles.buttonSecondary}
           onPress={() =>
-            // indicate to ChatLoginScreen we came from signup
             navigation.replace('CreateAccount', { fromLogin: true })
           }
         >
@@ -177,8 +186,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
     color: '#333',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -201,7 +216,7 @@ const styles = StyleSheet.create({
   forgot: {
     textAlign: 'right',
     color: '#007AFF',
-    marginBottom: 24,
+    marginBottom: 16,
     fontSize: 14,
   },
   buttonPrimary: {
