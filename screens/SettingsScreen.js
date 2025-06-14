@@ -1,9 +1,7 @@
-// screens/SettingsScreen.js
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  Switch,
   TouchableOpacity,
   StyleSheet,
   Alert,
@@ -11,71 +9,11 @@ import {
   ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { auth, firestore } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { auth } from '../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
 export default function SettingsScreen({ navigation }) {
-  /*
-  const [remindersEnabled, setRemindersEnabled] = useState(true);
-  const [currentPlan, setCurrentPlan] = useState('—');
-  const [notificationTone, setNotificationTone] = useState('Default');
-  */
-
-  // load settings & subscription on mount
-  /*
-  useEffect(() => {
-    (async () => {
-      const re = await AsyncStorage.getItem('enableReminders');
-      setRemindersEnabled(re !== 'false');
-
-      const tone = await AsyncStorage.getItem('notificationTone');
-      if (tone) setNotificationTone(tone);
-
-      const uid = auth.currentUser?.uid;
-      if (uid) {
-        const snap = await getDoc(doc(firestore, 'users', uid));
-        if (snap.exists()) {
-          setCurrentPlan(snap.data().subscriptionPlan || 'Basic');
-        }
-      }
-    })();
-  }, []);
-  */
-
-  // toggle reminders on/off
-  /*
-  const toggleReminders = async (value) => {
-    setRemindersEnabled(value);
-    await AsyncStorage.setItem('enableReminders', value.toString());
-    Alert.alert('Reminders', value ? 'Enabled' : 'Disabled');
-  };
-  */
-
-  // choose notification tone
-  /*
-  const changeTone = () => {
-    Alert.alert(
-      'Select Notification Tone',
-      null,
-      [
-        { text: 'Default', onPress: () => saveTone('Default') },
-        { text: 'Chime', onPress: () => saveTone('Chime') },
-        { text: 'Bell', onPress: () => saveTone('Bell') },
-        { text: 'Cancel', style: 'cancel' },
-      ],
-      { cancelable: true }
-    );
-  };
-
-  const saveTone = async (tone) => {
-    setNotificationTone(tone);
-    await AsyncStorage.setItem('notificationTone', tone);
-    Alert.alert('Notification Tone', `Set to "${tone}"`);
-  };
-  */
-
-  // send password reset link
+  // Send password reset link
   const handleResetPassword = () => {
     const email = auth.currentUser?.email;
     if (!email) return Alert.alert('Error', 'No email found.');
@@ -84,38 +22,14 @@ export default function SettingsScreen({ navigation }) {
       .catch(err => Alert.alert('Error', err.message));
   };
 
-  // export user data (placeholder)
-  const handleExportData = () => {
-    Alert.alert('Export Data', 'Your data export will be emailed to you shortly.');
-    // Implementation would call a Cloud Function to package & email.
-  };
-
-  // clear local app data
-  const handleClearData = async () => {
-    Alert.alert(
-      'Clear all local data?',
-      'This will reset your app preferences.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.clear();
-            // setRemindersEnabled(true);
-            // setNotificationTone('Default');
-            Alert.alert('Done', 'Local data cleared.');
-          },
-        },
-      ]
-    );
-  };
-
-  // logout
+  // Logout and reset navigation
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      navigation.replace('ChatLogin');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'ChatLogin' }],
+      });
     } catch (err) {
       Alert.alert('Logout failed', err.message);
     }
@@ -124,39 +38,6 @@ export default function SettingsScreen({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Settings</Text>
-
-      {/*
-      // ──────────────────────────────────────────────
-      // Bladder & Pressure Reminders (disabled)
-      <View style={styles.row}>
-        <Text style={styles.label}>Bladder & Pressure Reminders</Text>
-        <Switch
-          value={remindersEnabled}
-          onValueChange={toggleReminders}
-        />
-      </View>
-      */}
-
-      {/*
-      // ──────────────────────────────────────────────
-      // Notification Tone (disabled)
-      <TouchableOpacity style={styles.row} onPress={changeTone}>
-        <Text style={styles.label}>Notification Tone</Text>
-        <Text style={styles.value}>{notificationTone} ▸</Text>
-      </TouchableOpacity>
-      */}
-
-      {/*
-      // ──────────────────────────────────────────────
-      // Current Plan (disabled)
-      <TouchableOpacity
-        style={styles.row}
-        onPress={() => navigation.navigate('Subscription')}
-      >
-        <Text style={styles.label}>Current Plan</Text>
-        <Text style={styles.value}>{currentPlan} ▸</Text>
-      </TouchableOpacity>
-      */}
 
       {/* Reset password */}
       <View style={styles.row}>
@@ -182,23 +63,52 @@ export default function SettingsScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Export data 
-      <TouchableOpacity style={styles.fullRow} onPress={handleExportData}>
-        <Text style={styles.fullLabel}>Export My Data</Text>
-      </TouchableOpacity>
-      */}
-
-      {/* About */}
+      {/* About App */}
       <TouchableOpacity
         style={styles.fullRow}
-        onPress={() => Alert.alert('About MEdico', 'Version 1.0.0\n© 2025 MEdico Inc.')}
+        onPress={() =>
+          Alert.alert('About MEdico', 'Version 1.0.0\n© 2025 MEdico Inc.')
+        }
       >
         <Text style={styles.fullLabel}>About App</Text>
       </TouchableOpacity>
 
-      {/* Clear local storage */}
-      <TouchableOpacity style={styles.clearBtn} onPress={handleClearData}>
-        <Text style={styles.clearText}>Clear Local Data</Text>
+      {/* Educational Resources */}
+      <Text style={styles.sectionHeader}>Spinal Injury Resources</Text>
+
+      <TouchableOpacity
+        style={styles.resourceRow}
+        onPress={() => Linking.openURL('https://www.christopherreeve.org/living-with-paralysis/health/spinal-cord-injury')}
+      >
+        <Text style={styles.resourceText}>Understanding Spinal Cord Injury</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.resourceRow}
+        onPress={() => Linking.openURL('https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9090985/')}
+      >
+        <Text style={styles.resourceText}>Research Articles on SCI Recovery</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.resourceRow}
+        onPress={() => Linking.openURL('https://www.spinalcord.com/blog')}
+      >
+        <Text style={styles.resourceText}>SCI Blog: News & Advice</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.resourceRow}
+        onPress={() => Linking.openURL('https://www.spinalinjury101.org/')}
+      >
+        <Text style={styles.resourceText}>SpinalInjury101.org</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.resourceRow}
+        onPress={() => Linking.openURL('https://unitedspinal.org/')}
+      >
+        <Text style={styles.resourceText}>United Spinal Association</Text>
       </TouchableOpacity>
 
       {/* Logout */}
@@ -233,10 +143,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  value: {
-    fontSize: 16,
-    color: '#555',
-  },
   link: {
     fontSize: 16,
     color: '#007AFF',
@@ -251,20 +157,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#007AFF',
   },
-  clearBtn: {
-    marginTop: 32,
-    backgroundColor: '#FFC107',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  clearText: {
-    color: '#333',
-    fontSize: 16,
+  sectionHeader: {
+    fontSize: 18,
     fontWeight: '600',
+    marginTop: 32,
+    marginBottom: 16,
+    color: '#444',
+  },
+  resourceRow: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: '#EEE',
+  },
+  resourceText: {
+    fontSize: 15,
+    color: '#007AFF',
   },
   logoutBtn: {
-    marginTop: 16,
+    marginTop: 32,
     backgroundColor: '#f44336',
     paddingVertical: 14,
     borderRadius: 8,
