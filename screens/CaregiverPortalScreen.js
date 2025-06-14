@@ -141,7 +141,8 @@ export default function CaregiverPortalScreen({ navigation }) {
         <View style={styles.buttonStack}>
           <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#007aff' }]} onPress={() => navigation.navigate('ChatCA')}>
             <Ionicons name="chatbubbles" size={28} color="#fff" />
-            <Text style={styles.btnText}>Caregiver Chat</Text>
+            <Text style={styles.btnText}>Caregiver Chat    -{''}</Text>
+             <Text style={[styles.btnText, { fontStyle: 'italic' }]}>Coming Soon!</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#f44336' }]} onPress={() => sendEmergencyEmail('Fall')}>
