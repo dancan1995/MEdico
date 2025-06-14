@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { auth } from '../firebase';
 import {
@@ -25,6 +26,7 @@ export default function ChatLoginScreen({ navigation, route }) {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
+  const [emailValid, setEmailValid] = useState(true);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(user => {
@@ -35,10 +37,23 @@ export default function ChatLoginScreen({ navigation, route }) {
     return unsub;
   }, [navigation, route.params]);
 
+  const validateEmail = (value) => {
+    const regex = /^\S+@\S+\.\S+$/;
+    return regex.test(value);
+  };
+
   const handleLogin = async () => {
     setError('');
+    const isEmailValid = validateEmail(email.trim());
+    setEmailValid(isEmailValid);
+
     if (!email || !password) {
       setError('Please enter both your email and password.');
+      return;
+    }
+
+    if (!isEmailValid) {
+      setError('Please enter a valid email address.');
       return;
     }
 
@@ -46,7 +61,6 @@ export default function ChatLoginScreen({ navigation, route }) {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
 
-      // Block login if email is not verified
       if (!user.emailVerified) {
         await auth.currentUser.sendEmailVerification();
         await auth.signOut();
@@ -82,87 +96,97 @@ export default function ChatLoginScreen({ navigation, route }) {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={100}
       >
-        <Image
-          source={require('../assets/images/logo.png')}
-          style={styles.logo}
-        />
-
-        <Text style={styles.header}>Welcome back to MEdico</Text>
-
-        {/* Error Message */}
-        {error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : null}
-
-        {/* Email Input */}
-        <View style={styles.inputWrapper}>
-          <Ionicons name="mail-outline" size={20} color="#555" />
-          <TextInput
-            style={styles.input}
-            placeholder="Email address"
-            placeholderTextColor="#888"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
           />
-        </View>
 
-        {/* Password Input */}
-        <View style={styles.inputWrapper}>
-          <Ionicons name="lock-closed-outline" size={20} color="#555" />
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Password"
-            placeholderTextColor="#888"
-            secureTextEntry={!showPass}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity
-            onPress={() => setShowPass(v => !v)}
-            style={styles.eyeIcon}
-          >
-            <Ionicons
-              name={showPass ? 'eye-off-outline' : 'eye-outline'}
-              size={20}
-              color="#555"
+          <Text style={styles.header}>Welcome back to MEdico</Text>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          {/* Email Input */}
+          <View style={styles.inputWrapper}>
+            <Ionicons name="mail-outline" size={20} color="#555" />
+            <TextInput
+              style={styles.input}
+              placeholder="Email address"
+              placeholderTextColor="#888"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={text => {
+                setEmail(text);
+                setEmailValid(true);
+              }}
+              editable={true}
+              focusable={true}
             />
-          </TouchableOpacity>
-        </View>
-
-        {/* Forgot Password */}
-        <TouchableOpacity onPress={handlePasswordReset}>
-          <Text style={styles.forgot}>Forgot password?</Text>
-        </TouchableOpacity>
-
-        {/* Login Button */}
-        <TouchableOpacity
-          style={styles.buttonPrimary}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Log In</Text>
+          </View>
+          {!emailValid && (
+            <Text style={styles.errorText}>Invalid email format</Text>
           )}
-        </TouchableOpacity>
 
-        {/* Create Account */}
-        <TouchableOpacity
-          style={styles.buttonSecondary}
-          onPress={() =>
-            navigation.replace('CreateAccount', { fromLogin: true })
-          }
-        >
-          <Text style={styles.buttonText}>Create Account</Text>
-        </TouchableOpacity>
+          {/* Password Input */}
+          <View style={styles.inputWrapper}>
+            <Ionicons name="lock-closed-outline" size={20} color="#555" />
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Password"
+              placeholderTextColor="#888"
+              secureTextEntry={!showPass}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setShowPass(v => !v)}
+              style={styles.eyeIcon}
+            >
+              <Ionicons
+                name={showPass ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#555"
+              />
+            </TouchableOpacity>
+          </View>
 
-        <Text style={styles.smallText}>
-          You need an account and subscription to chat with MEdico AI.
-        </Text>
+          {/* Forgot Password */}
+          <TouchableOpacity onPress={handlePasswordReset}>
+            <Text style={styles.forgot}>Forgot password?</Text>
+          </TouchableOpacity>
+
+          {/* Login Button */}
+          <TouchableOpacity
+            style={styles.buttonPrimary}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Log In</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Create Account */}
+          <TouchableOpacity
+            style={styles.buttonSecondary}
+            onPress={() =>
+              navigation.replace('CreateAccount', { fromLogin: true })
+            }
+          >
+            <Text style={styles.buttonText}>Create Account</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.smallText}></Text>
+        </ScrollView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
@@ -173,7 +197,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 24,
-    justifyContent: 'center',
   },
   logo: {
     width: 100,
@@ -205,6 +228,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
+    flex: 1,
     marginLeft: 8,
     fontSize: 16,
     color: '#000',

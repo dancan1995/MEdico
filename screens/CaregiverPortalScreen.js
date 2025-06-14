@@ -9,6 +9,8 @@ import {
   Alert,
   Linking,
   Platform,
+  ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { auth, firestore } from '../firebase';
 import {
@@ -131,75 +133,84 @@ export default function CaregiverPortalScreen({ navigation }) {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Caregiver Updates</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
+        <Text style={styles.title}>Caregiver Updates</Text>
+        <Text style={styles.subtitle}>Quick Emergency Actions</Text>
 
-      <Text style={styles.subtitle}>Quick Emergency Actions</Text>
+        <View style={styles.buttonStack}>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#007aff' }]} onPress={() => navigation.navigate('ChatCA')}>
+            <Ionicons name="chatbubbles" size={28} color="#fff" />
+            <Text style={styles.btnText}>Caregiver Chat</Text>
+          </TouchableOpacity>
 
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#007aff' }]} onPress={() => navigation.navigate('ChatCA')}>
-          <Ionicons name="chatbubbles" size={24} color="#fff" />
-          <Text style={styles.btnText}>Caregiver Chat</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#f44336' }]} onPress={() => sendEmergencyEmail('Fall')}>
+            <MaterialIcons name="local-hospital" size={28} color="#fff" />
+            <Text style={styles.btnText}>Fall</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#f44336' }]} onPress={() => sendEmergencyEmail('Fall')}>
-          <MaterialIcons name="local-hospital" size={24} color="#fff" />
-          <Text style={styles.btnText}>Fall</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#ff9800' }]} onPress={() => sendEmergencyEmail('Breathing Issue')}>
+            <Ionicons name="medkit" size={28} color="#fff" />
+            <Text style={styles.btnText}>Breathing</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#ff9800' }]} onPress={() => sendEmergencyEmail('Breathing Issue')}>
-          <Ionicons name="medkit" size={24} color="#fff" />
-          <Text style={styles.btnText}>Breathing</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#9c27b0' }]} onPress={() => sendEmergencyEmail('Seizure')}>
+            <Ionicons name="flash" size={28} color="#fff" />
+            <Text style={styles.btnText}>Seizure</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#9c27b0' }]} onPress={() => sendEmergencyEmail('Seizure')}>
-          <Ionicons name="flash" size={24} color="#fff" />
-          <Text style={styles.btnText}>Seizure</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#d32f2f' }]} onPress={() => sendEmergencyEmail('HeartAttack')}>
+            <Ionicons name="heart" size={28} color="#fff" />
+            <Text style={styles.btnText}>Heart Attack</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#d32f2f' }]} onPress={() => sendEmergencyEmail('HeartAttack')}>
-          <Ionicons name="heart" size={24} color="#fff" />
-          <Text style={styles.btnText}>Heart Attack</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#388e3c' }]} onPress={() => sendEmergencyEmail('Stroke')}>
+            <MaterialIcons name="sick" size={28} color="#fff" />
+            <Text style={styles.btnText}>Stroke</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#388e3c' }]} onPress={() => sendEmergencyEmail('Stroke')}>
-          <MaterialIcons name="sick" size={24} color="#fff" />
-          <Text style={styles.btnText}>Stroke</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#25D366' }]} onPress={sendViaWhatsApp}>
+            <FontAwesome name="whatsapp" size={28} color="#fff" />
+            <Text style={styles.btnText}>WhatsApp</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#25D366' }]} onPress={sendViaWhatsApp}>
-          <FontAwesome name="whatsapp" size={24} color="#fff" />
-          <Text style={styles.btnText}>WhatsApp</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#2196f3' }]} onPress={sendViaSMS}>
+            <Ionicons name="chatbox-ellipses" size={28} color="#fff" />
+            <Text style={styles.btnText}>SMS</Text>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#2196f3' }]} onPress={sendViaSMS}>
-          <Ionicons name="chatbox-ellipses" size={24} color="#fff" />
-          <Text style={styles.btnText}>SMS</Text>
-        </TouchableOpacity>
-      </View>
+        <FlatList
+          data={events}
+          keyExtractor={(i) => i.id}
+          renderItem={renderItem}
+          ListEmptyComponent={<Text style={styles.empty}></Text>}
+          scrollEnabled={false}
+        />
 
-      <FlatList
-        data={events}
-        keyExtractor={(i) => i.id}
-        renderItem={renderItem}
-        ListEmptyComponent={<Text style={styles.empty}></Text>}
-      />
-
-      <View style={styles.emergencyWrapper}>
-        <Text style={styles.emergencyText}>Click for emergencies only</Text>
-        <TouchableOpacity
-          style={styles.emergency}
-          onPress={() => Linking.openURL('tel:16162407246')}
-        >
-          <Ionicons name="call" size={30} color="#fff" />
-        </TouchableOpacity>
-      </View>
-    </View>
+        <View style={styles.emergencyWrapper}>
+          <Text style={styles.emergencyText}>Click for emergencies only</Text>
+          <TouchableOpacity
+            style={styles.emergency}
+            onPress={() => Linking.openURL('tel:16162407246')}
+          >
+            <Ionicons name="call" size={30} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fafafa', padding: 16 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fafafa',
+  },
+  container: {
+    flex: 1,
+    padding: 16,
+  },
   title: {
     fontSize: 22,
     fontWeight: '700',
@@ -209,7 +220,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     fontWeight: '500',
-    marginBottom: 8,
+    marginBottom: 12,
     textAlign: 'center',
     color: '#555',
   },
@@ -228,32 +239,33 @@ const styles = StyleSheet.create({
   time: { fontSize: 12, color: '#666', marginTop: 4 },
   ackButton: { color: '#007AFF', fontWeight: '600' },
   empty: { textAlign: 'center', color: '#666', marginTop: 24 },
-  buttonRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+  buttonStack: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginVertical: 6,
-    width: '48%',
-    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginVertical: 8,
+    width: '100%',
+    justifyContent: 'flex-start',
   },
   btnText: {
     color: '#fff',
-    fontWeight: '600',
-    marginLeft: 8,
-    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 14,
+    fontSize: 18,
   },
   emergencyWrapper: {
     alignItems: 'center',
     marginTop: 30,
-    marginBottom: 12,
+    marginBottom: 40, // ← ensures button is above nav bar
+    paddingBottom: 30,
   },
   emergencyText: {
     fontSize: 14,

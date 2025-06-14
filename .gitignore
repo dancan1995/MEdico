@@ -1,11 +1,22 @@
 ﻿# Node modules
 node_modules/
 
-config.js/
-
 # Expo
 .expo/
 .expo-shared/
+
+# Native projects (important!)
+android/
+ios/
+
+# Output builds
+dist/
+web-build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # VS Code
 .vscode/
@@ -13,7 +24,26 @@ config.js/
 # macOS
 .DS_Store
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Local env files
+.env*
+*.pem
+
+# Certificates and keystores
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# TypeScript
+*.tsbuildinfo
+
+# Metro
+.metro-health-check*
+
+# Expo auto-generated types
+expo-env.d.ts
+
+# Other
+config.js/
+*.orig.*

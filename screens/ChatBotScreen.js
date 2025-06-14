@@ -146,7 +146,7 @@ export default function ChatBotScreen({ navigation }) {
           </View>
         )}
 
-        <View style={[styles.inputRow, { paddingBottom: 12 }]}>
+        <View style={[styles.inputRow, { paddingBottom: Platform.OS === 'ios' ? 12 : 35 }]}>
           <TextInput
             style={styles.input}
             placeholder="Type your message..."

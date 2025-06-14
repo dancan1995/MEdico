@@ -13,6 +13,7 @@ import {
   Platform,
   LayoutAnimation,
   UIManager,
+  ScrollView,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
@@ -219,47 +220,49 @@ export default function FunctionalGoalsScreen() {
         <Ionicons name="add-circle" size={56} color="#007AFF" />
       </TouchableOpacity>
 
-      {/* Modal with SafeAreaView to prevent overlapping the time/status bar */}
+      {/* Modal with scrollable content */}
       <Modal visible={modalVisible} animationType="slide">
         <SafeAreaView style={[styles.modal, { paddingTop: insets.top }]}>
-          <Text style={styles.modalHeader}>New Goal</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter goal..."
-            value={newText}
-            onChangeText={setNewText}
-          />
-          <TouchableOpacity
-            onPress={() => setShowPicker(true)}
-            style={styles.dateButton}
-          >
-            <Text style={styles.dateButtonText}>
-              Due Date: {fmtDate(newDate)}
-            </Text>
-          </TouchableOpacity>
-          {showPicker && (
-            <DateTimePicker
-              value={newDate}
-              mode="date"
-              display="calendar"
-              onChange={(e, date) => {
-                setShowPicker(Platform.OS === 'ios');
-                if (date) setNewDate(date);
-              }}
+          <ScrollView>
+            <Text style={styles.modalHeader}>New Goal</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter goal..."
+              value={newText}
+              onChangeText={setNewText}
             />
-          )}
-          <View style={styles.modalActions}>
-            <Button title="Save" onPress={saveGoal} />
-            <Button
-              title="Cancel"
-              color="#888"
-              onPress={() => {
-                setModalVisible(false);
-                setNewText('');
-                setShowPicker(false);
-              }}
-            />
-          </View>
+            <TouchableOpacity
+              onPress={() => setShowPicker(true)}
+              style={styles.dateButton}
+            >
+              <Text style={styles.dateButtonText}>
+                Due Date: {fmtDate(newDate)}
+              </Text>
+            </TouchableOpacity>
+            {showPicker && (
+              <DateTimePicker
+                value={newDate}
+                mode="date"
+                display="default"
+                onChange={(e, date) => {
+                  setShowPicker(false);
+                  if (date) setNewDate(date);
+                }}
+              />
+            )}
+            <View style={styles.modalActions}>
+              <Button title="Save" onPress={saveGoal} />
+              <Button
+                title="Cancel"
+                color="#888"
+                onPress={() => {
+                  setModalVisible(false);
+                  setNewText('');
+                  setShowPicker(false);
+                }}
+              />
+            </View>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
     </View>

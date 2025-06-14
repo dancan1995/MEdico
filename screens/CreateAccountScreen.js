@@ -9,9 +9,8 @@ import {
   Platform,
   Image,
   ScrollView,
-  Modal,
+  Alert,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, firestore } from '../firebase';
@@ -19,47 +18,23 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function CreateAccountScreen({ navigation }) {
   const [email, setEmail] = useState('');
-  const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [showPicker, setShowPicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [signupError, setSignupError] = useState('');
 
   const checkEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-  const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
-
-  const formatDateMMDDYYYY = date => {
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    const yyyy = date.getFullYear();
-    return `${mm}-${dd}-${yyyy}`;
-  };
-
-  const onDateChange = (event, date) => {
-    if (Platform.OS === 'android') setShowPicker(false);
-    if (date) {
-      setSelectedDate(date);
-      setDob(formatDateMMDDYYYY(date));
-    }
-  };
-
-  const toggleDatePicker = () => {
-    setShowPicker(prev => !prev);
-  };
 
   const handleSignup = async () => {
     setSignupError('');
     const e = email.trim().toLowerCase();
-    if (!e || !dob || !password || !confirm) {
+    if (!e || !password || !confirm) {
       return setSignupError('Please fill out all fields.');
     }
     if (!checkEmail(e)) {
       return setSignupError('Enter a valid email address.');
-    }
-    if (!dateRegex.test(dob)) {
-      return setSignupError('Date must be in MM-DD-YYYY format.');
     }
     if (password !== confirm) {
       return setSignupError('Both passwords must match.');
@@ -73,9 +48,13 @@ export default function CreateAccountScreen({ navigation }) {
 
       await setDoc(doc(firestore, 'users', user.uid), {
         email: user.email,
-        dateOfBirth: dob,
         createdAt: serverTimestamp(),
       });
+
+      Alert.alert(
+        'Account Created',
+        'Please log in using the email and password you just used. A verification link will be sent to your email.'
+      );
 
       navigation.replace('ChatLogin', { fromSignup: true });
     } catch (err) {
@@ -97,11 +76,10 @@ export default function CreateAccountScreen({ navigation }) {
 
         <Text style={styles.header}>Create Your Account</Text>
 
-        {/* Error Display */}
         {signupError ? <Text style={styles.errorText}>{signupError}</Text> : null}
 
         <TextInput
-          style={styles.input}
+          style={[styles.input, styles.inputSpacing]}
           placeholder="Email address"
           placeholderTextColor="#888"
           autoCapitalize="none"
@@ -110,79 +88,52 @@ export default function CreateAccountScreen({ navigation }) {
           onChangeText={setEmail}
         />
 
-        <View style={styles.dobRow}>
+        <View style={[styles.inputWrapper, styles.inputSpacing]}>
           <TextInput
             style={[styles.input, { flex: 1 }]}
-            placeholder="MM-DD-YYYY"
+            placeholder="Password"
             placeholderTextColor="#888"
-            keyboardType="numbers-and-punctuation"
-            value={dob}
-            onChangeText={setDob}
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
           />
-          <TouchableOpacity style={styles.dobButton} onPress={toggleDatePicker}>
-            <Ionicons name="calendar-outline" size={24} color="#007AFF" />
+          <TouchableOpacity onPress={() => setShowPassword(prev => !prev)}>
+            <Ionicons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color="#555"
+            />
           </TouchableOpacity>
         </View>
 
-        {Platform.OS === 'android' && showPicker && (
-          <Modal transparent animationType="fade" visible={showPicker}>
-            <TouchableOpacity
-              style={styles.modalBackground}
-              onPress={toggleDatePicker}
-              activeOpacity={1}
-            >
-              <View style={styles.pickerContainer}>
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="date"
-                  display="spinner"
-                  maximumDate={new Date()}
-                  onChange={onDateChange}
-                />
-              </View>
-            </TouchableOpacity>
-          </Modal>
-        )}
-
-        {Platform.OS === 'ios' && showPicker && (
-          <DateTimePicker
-            value={selectedDate}
-            mode="date"
-            display="spinner"
-            maximumDate={new Date()}
-            onChange={onDateChange}
+        <View style={[styles.inputWrapper, styles.inputSpacing]}>
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="Confirm Password"
+            placeholderTextColor="#888"
+            secureTextEntry={!showConfirm}
+            value={confirm}
+            onChangeText={setConfirm}
           />
-        )}
-
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#888"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          placeholderTextColor="#888"
-          secureTextEntry
-          value={confirm}
-          onChangeText={setConfirm}
-        />
+          <TouchableOpacity onPress={() => setShowConfirm(prev => !prev)}>
+            <Ionicons
+              name={showConfirm ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color="#555"
+            />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={styles.termsRow}
           onPress={() => setAcceptedTerms(prev => !prev)}
           activeOpacity={0.7}
         >
-          <Ionicons
-            name={acceptedTerms ? 'checkbox' : 'checkbox-outline'}
-            size={20}
-            color={acceptedTerms ? '#007AFF' : '#555'}
-            style={{ marginRight: 8 }}
-          />
+          <View style={styles.checkboxBox}>
+            {acceptedTerms && (
+              <Ionicons name="checkmark" size={14} color="#007AFF" />
+            )}
+          </View>
           <Text style={styles.termsText}>
             I agree to the{' '}
             <Text style={styles.link} onPress={() => navigation.navigate('Terms')}>
@@ -241,24 +192,33 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    marginBottom: 16,
     fontSize: 16,
   },
-  dobRow: {
+  inputSpacing: {
+    marginBottom: 16,
+  },
+  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  dobButton: {
     backgroundColor: '#f2f2f2',
     borderRadius: 8,
-    padding: 12,
-    marginLeft: 8,
-    marginBottom: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   termsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 16,
+  },
+  checkboxBox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1.5,
+    borderColor: '#007AFF',
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
   },
   termsText: {
     fontSize: 14,
@@ -297,16 +257,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '600',
-  },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: '#00000099',
-    justifyContent: 'flex-end',
-  },
-  pickerContainer: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
   },
 });
