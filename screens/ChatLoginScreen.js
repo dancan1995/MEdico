@@ -68,7 +68,10 @@ export default function ChatLoginScreen({ navigation, route }) {
         return;
       }
 
-      navigation.replace('Home');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
     } catch (err) {
       setError('Incorrect email or password.');
     } finally {

@@ -14,6 +14,7 @@ import {
   ScrollView,
   Keyboard,
   TouchableWithoutFeedback,
+  FlatList,
 } from 'react-native';
 import { auth, firestore } from '../firebase';
 import {
@@ -61,11 +62,20 @@ export default function MentalHealthScreen() {
       return Alert.alert('Missing fields', 'Enter both mood and journal.');
     }
 
-    // Filter out entries created in the last 24 hours
+    const moodVal = Number(mood);
+    if (
+      isNaN(moodVal) ||
+      moodVal < 1 ||
+      moodVal > 10 ||
+      !Number.isInteger(moodVal)
+    ) {
+      return Alert.alert('Invalid Mood', 'Mood must be a whole number between 1 and 10.');
+    }
+
     const now = new Date();
     const entriesInLast24Hours = entries.filter(entry => {
-      const diffInMs = now - entry.createdAt;
-      return diffInMs < 24 * 60 * 60 * 1000;
+      const diff = now - entry.createdAt;
+      return diff < 24 * 60 * 60 * 1000;
     });
 
     if (entriesInLast24Hours.length >= 2) {
@@ -76,7 +86,7 @@ export default function MentalHealthScreen() {
     }
 
     const data = {
-      mood: Number(mood),
+      mood: moodVal,
       journal: journal.trim(),
       createdAt: serverTimestamp(),
     };
@@ -105,6 +115,16 @@ export default function MentalHealthScreen() {
     datasets: [{ data: recent.map(e => e.mood) }],
   };
   const screenWidth = Dimensions.get('window').width - 32;
+
+  const renderTableItem = ({ item }) => (
+    <View style={styles.tableRow}>
+      <Text style={styles.tableCell}>
+        {item.createdAt.toLocaleDateString()} {item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </Text>
+      <Text style={styles.tableCell}>{item.mood}/10</Text>
+      <Text style={styles.tableCell}>{item.journal}</Text>
+    </View>
+  );
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -188,15 +208,24 @@ export default function MentalHealthScreen() {
             />
           )}
 
-          {entries.map(item => (
-            <View key={item.id} style={styles.entry}>
-              <Text style={styles.entryHeader}>
-                {item.createdAt.toLocaleString()}
+          <Text style={styles.tableHeader}>Entries</Text>
+          <View style={styles.tableHeaderRow}>
+            <Text style={[styles.tableCell, styles.bold]}>Date</Text>
+            <Text style={[styles.tableCell, styles.bold]}>Mood</Text>
+            <Text style={[styles.tableCell, styles.bold]}>Journal</Text>
+          </View>
+
+          <FlatList
+            data={entries}
+            keyExtractor={item => item.id}
+            renderItem={renderTableItem}
+            scrollEnabled={false}
+            ListEmptyComponent={
+              <Text style={{ textAlign: 'center', marginTop: 12, color: '#666' }}>
+                No entries yet.
               </Text>
-              <Text style={styles.entryMood}>Mood: {item.mood}/10</Text>
-              <Text style={styles.entryText}>{item.journal}</Text>
-            </View>
-          ))}
+            }
+          />
 
           <View style={{ height: 60 }} />
         </ScrollView>
@@ -250,25 +279,31 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 6,
   },
-  entry: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 6,
-    marginVertical: 6,
-    elevation: 1,
+  tableHeader: {
+    fontSize: 18,
+    fontWeight: '500',
+    marginTop: 16,
+    marginBottom: 6,
   },
-  entryHeader: {
-    fontSize: 12,
-    color: '#666',
+  tableHeaderRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderColor: '#999',
+    paddingVertical: 6,
+    backgroundColor: '#eee',
   },
-  entryMood: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 4,
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+    paddingVertical: 8,
   },
-  entryText: {
-    marginTop: 4,
+  tableCell: {
+    flex: 1,
+    paddingHorizontal: 4,
     fontSize: 14,
-    color: '#333',
+  },
+  bold: {
+    fontWeight: 'bold',
   },
 });

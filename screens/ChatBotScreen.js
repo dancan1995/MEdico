@@ -27,7 +27,10 @@ export default function ChatBotScreen({ navigation }) {
           onPress={async () => {
             try {
               await auth.signOut();
-              navigation.replace('ChatLogin');
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'ChatLogin' }],
+              });
             } catch (err) {
               Alert.alert('Logout Error', err.message);
             }

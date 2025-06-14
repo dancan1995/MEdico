@@ -56,7 +56,10 @@ export default function CreateAccountScreen({ navigation }) {
         'Please log in using the email and password you just used. A verification link will be sent to your email.'
       );
 
-      navigation.replace('ChatLogin', { fromSignup: true });
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'ChatLogin', params: { fromSignup: true } }],
+      })
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
         setSignupError('This email is already in use.');

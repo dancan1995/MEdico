@@ -62,12 +62,24 @@ export default function PainLogScreen() {
     if (!type.trim() || !location.trim() || !rating.trim()) {
       return Alert.alert('Missing fields', 'Fill out all three fields.');
     }
+
+    const ratingNum = Number(rating);
+    if (
+      isNaN(ratingNum) ||
+      ratingNum < 1 ||
+      ratingNum > 10 ||
+      !Number.isInteger(ratingNum)
+    ) {
+      return Alert.alert('Invalid Intensity', 'Please enter a whole number between 1 and 10.');
+    }
+
     const entry = {
       type: type.trim(),
       location: location.trim(),
-      rating: Number(rating),
+      rating: ratingNum,
       createdAt: serverTimestamp(),
     };
+
     try {
       if (user) {
         await addDoc(
@@ -90,13 +102,13 @@ export default function PainLogScreen() {
   };
 
   const renderItem = ({ item }) => (
-    <View style={styles.logItem}>
-      <Text style={styles.logText}>
-        {item.type} / {item.location} / {item.rating}/10
+    <View style={styles.logRow}>
+      <Text style={styles.logCell}>
+        {item.createdAt.toLocaleDateString()} {item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
       </Text>
-      <Text style={styles.logTime}>
-        {item.createdAt.toLocaleString()}
-      </Text>
+      <Text style={styles.logCell}>{item.type}</Text>
+      <Text style={styles.logCell}>{item.location}</Text>
+      <Text style={styles.logCell}>{item.rating}/10</Text>
     </View>
   );
 
@@ -198,6 +210,13 @@ export default function PainLogScreen() {
         )}
 
         <Text style={styles.subheader}>Logs</Text>
+        <View style={styles.logHeaderRow}>
+          <Text style={[styles.logCell, styles.logHeader]}>Date</Text>
+          <Text style={[styles.logCell, styles.logHeader]}>Type</Text>
+          <Text style={[styles.logCell, styles.logHeader]}>Location</Text>
+          <Text style={[styles.logCell, styles.logHeader]}>Intensity</Text>
+        </View>
+
         <FlatList
           data={logs}
           keyExtractor={i => i.id}
@@ -247,12 +266,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subheader: { marginTop: 16, fontSize: 18, fontWeight: '500' },
-  logItem: {
-    paddingVertical: 8,
+  logHeaderRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderColor: '#999',
+    paddingVertical: 6,
+    backgroundColor: '#f0f0f0',
+  },
+  logRow: {
+    flexDirection: 'row',
     borderBottomWidth: 1,
     borderColor: '#EEE',
+    paddingVertical: 8,
   },
-  logText: { fontSize: 16 },
-  logTime: { fontSize: 12, color: '#666', marginTop: 4 },
+  logCell: {
+    flex: 1,
+    fontSize: 14,
+    textAlign: 'left',
+    paddingHorizontal: 4,
+  },
+  logHeader: {
+    fontWeight: 'bold',
+  },
   empty: { textAlign: 'center', color: '#666', marginTop: 16 },
 });
