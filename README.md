@@ -168,8 +168,6 @@ Run on a physical device or Simulator with notifications enabled
 
 5. Open a Pull Request
 
-Please follow the existing code style and include appropriate tests.
-
 ## Contact
 📧 dancanodhiambo95@gmail.com
 
