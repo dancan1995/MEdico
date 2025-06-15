@@ -11,12 +11,10 @@
 3. [Architecture & Technology Stack](#architecture--technology-stack)  
 4. [Installation & Setup](#installation--setup)  
 5. [Running the App Locally](#running-the-app-locally)   
-9. [Third-Party Dependencies](#third-party-dependencies)  
-10. [Security & Privacy Considerations](#security--privacy-considerations)  
-11. [Roadmap](#roadmap)  
-12. [Contributing](#contributing)  
-13. [License](#license)  
-14. [Contact](#contact)  
+6. [Third-Party Dependencies](#third-party-dependencies)  
+7. [Roadmap](#roadmap)  
+8. [Contributing](#contributing)  
+9. [Contact](#contact)  
 
 ---
 
