@@ -2,8 +2,6 @@
 
 **An all-in-one Spinal Cord Injury (SCI) recovery support app** built with **React Native**, **Expo**, and **Firebase**. MEđico empowers users to schedule health reminders, log vitals & symptoms, track rehabilitation goals, maintain mental health journals, and communicate in real-time with caregivers or an AI assistant — all from their mobile device.
 
-![MEđico Home Screen](./assets/screenshots/home.png)
-
 ---
 
 ## Table of Contents
