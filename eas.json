@@ -4,16 +4,18 @@
   },
   "build": {
     "production": {
-      "android": {
-        "buildType": "app-bundle"
-      },
-      "channel": "production"
+      "android": { "buildType": "app-bundle" },
+      "channel": "production",
+      "env": {
+        "OPENAI_API_KEY": "@OPENAI_API_KEY"
+      }
     },
     "preview": {
-      "android": {
-        "buildType": "apk"
-      },
-      "channel": "preview"
+      "android": { "buildType": "apk" },
+      "channel": "preview",
+      "env": {
+        "OPENAI_API_KEY": "@OPENAI_API_KEY"
+      }
     }
   },
   "submit": {

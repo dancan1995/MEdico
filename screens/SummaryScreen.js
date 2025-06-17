@@ -13,10 +13,13 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-
 import { auth } from '../firebase';
 import { readData } from '../utils/patientDataStore';
-import { OPENAI_API_KEY } from '../config';
+import Constants from 'expo-constants';
+
+// Use expoConfig first, then fall back to manifest for EAS Updates compatibility
+const expoConfig = Constants.expoConfig ?? Constants.manifest;
+const OPENAI_API_KEY = expoConfig?.extra?.openAIKey;
 
 /* ─────────────────────────── OpenAI helper ────────────────────────── */
 const summarizeWithOpenAI = async (patientData) => {

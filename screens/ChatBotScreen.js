@@ -15,7 +15,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../firebase';
-import { OPENAI_API_KEY } from '../config';
+import Constants from 'expo-constants';
+
+// In SDK 47+ and with EAS Updates, Constants.manifest can be null.
+// Use expoConfig first, then fall back to manifest.
+const expoConfig = Constants.expoConfig ?? Constants.manifest;
+const OPENAI_API_KEY = expoConfig?.extra?.openAIKey;
 
 export default function ChatBotScreen({ navigation }) {
   const insets = useSafeAreaInsets();
