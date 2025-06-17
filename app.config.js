@@ -1,5 +1,5 @@
 // app.config.js
-import 'dotenv/config'; // allows loading a local .env, optional
+import 'dotenv/config'; 
 export default ({ config }) => ({
   ...config,
   expo: {

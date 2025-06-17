@@ -21,6 +21,7 @@ import Constants from 'expo-constants';
 // Use expoConfig first, then fall back to manifest.
 const expoConfig = Constants.expoConfig ?? Constants.manifest;
 const OPENAI_API_KEY = expoConfig?.extra?.openAIKey;
+console.log('Injected key →', expoConfig.extra.openAIKey);
 
 export default function ChatBotScreen({ navigation }) {
   const insets = useSafeAreaInsets();
